@@ -1,5 +1,10 @@
 import { AuthForm } from '@/components/auth/auth-form';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export default function LoginPage() {
-  return <AuthForm isSignUp={false} />;
+  return (
+    <FirebaseClientProvider>
+      <AuthForm isSignUp={false} />
+    </FirebaseClientProvider>
+  );
 }
