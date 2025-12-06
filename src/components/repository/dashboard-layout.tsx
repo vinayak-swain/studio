@@ -6,7 +6,7 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -25,11 +25,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <div className="min-h-screen bg-background text-foreground">
+      <DashboardHeader />
+      {children}
+    </div>
+  );
+}
+
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
     <FirebaseClientProvider>
-      <div className="min-h-screen bg-background text-foreground">
-        <DashboardHeader />
-        {children}
-      </div>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
     </FirebaseClientProvider>
   );
 }
