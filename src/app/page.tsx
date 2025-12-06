@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/icons/logo';
 import { InteractiveBackground } from '@/components/interactive-background';
 
 export default function HeroPage() {
@@ -9,20 +8,13 @@ export default function HeroPage() {
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background">
       <InteractiveBackground />
 
-      <header className="fixed top-0 z-20 flex h-20 w-full items-center justify-between px-6 md:px-12 lg:px-20">
+      <header className="fixed top-0 z-20 flex h-20 w-full items-center justify-center px-6 md:px-12 lg:px-20">
         <Link
           href="#"
           className="flex items-center gap-2 text-lg font-semibold text-foreground"
         >
-          <Logo className="h-7 w-7 text-blue-600" />
           <span className="font-bold">CodeHub</span>
         </Link>
-        
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Sign In</Link>
-          </Button>
-        </div>
       </header>
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl px-6">
