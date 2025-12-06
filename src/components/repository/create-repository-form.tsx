@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,10 +14,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Book } from 'lucide-react';
-import Link from 'next/link';
+import {
+  collection,
+  serverTimestamp,
+} from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z
@@ -29,6 +31,7 @@ const formSchema = z.object({
 
 export function CreateRepositoryForm() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,9 +43,15 @@ export function CreateRepositoryForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Here you would typically handle the repository creation logic,
-    // e.g., by calling a Firestore function.
+    if (!user || !firestore) return;
+
+    const repositoriesRef = collection(firestore, 'users', user.uid, 'repositories');
+    addDocumentNonBlocking(repositoriesRef, {
+      ...values,
+      ownerId: user.uid,
+      createdAt: serverTimestamp(),
+    });
+    
     router.push('/dashboard');
   }
 
@@ -70,7 +79,7 @@ export function CreateRepositoryForm() {
                     <FormControl>
                       <Input
                         disabled
-                        value={user?.email?.split('@')[0] || 'user'}
+                        value={user?.displayName || user?.email?.split('@')[0] || 'user'}
                         className="w-32"
                       />
                     </FormControl>

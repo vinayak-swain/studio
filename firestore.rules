@@ -88,6 +88,26 @@ service cloud.firestore {
       
       // The owner can delete their profile document.
       allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description
+       *   Secures the repositories subcollection for each user.
+       * @path
+       *   /users/{userId}/repositories/{repoId}
+       * @principle
+       *   Ensures a user can only manage their own repositories.
+       */
+      match /repositories/{repoId} {
+        // Only the owner can list their own repositories.
+        allow list, get: if isOwner(userId);
+
+        // The owner can create a new repository.
+        // The new repository data must include the owner's ID.
+        allow create: if isOwner(userId) && request.resource.data.ownerId == userId;
+
+        // The owner can update or delete their own repository.
+        allow update, delete: if isExistingOwner(userId);
+      }
     }
   }
 }

@@ -37,6 +37,31 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "Repository": {
+      "title": "Repository",
+      "type": "object",
+      "description": "Represents a code repository within the CodeHub application.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the repository."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the repository."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The ID of the user who owns the repository."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the repository was created.",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "ownerId", "createdAt"]
     }
   },
   "auth": {
@@ -59,6 +84,26 @@
             {
               "name": "userId",
               "description": "The unique identifier of the user. This is used to enforce path-based ownership."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/repositories/{repoId}",
+        "definition": {
+          "entityName": "Repository",
+          "schema": {
+            "$ref": "#/backend/entities/Repository"
+          },
+          "description": "Stores user-owned repositories. Path-based ownership is enforced via the `userId` parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "repoId",
+              "description": "The unique identifier of the repository."
             }
           ]
         }
