@@ -60,7 +60,7 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
         <div className="mb-8 flex justify-center">
           <Link href="/" className="flex items-center gap-3 text-2xl font-semibold">
             <Logo className="h-8 w-8" />
-            <span>DVCS</span>
+            <span>CodeHub</span>
           </Link>
         </div>
         <h2 className="mb-6 text-center text-2xl font-bold">

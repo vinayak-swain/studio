@@ -15,7 +15,7 @@ export default function HeroPage() {
           className="flex items-center gap-2 text-lg font-semibold text-foreground"
         >
           <Logo className="h-7 w-7 text-blue-600" />
-          <span className="font-bold">Antigravity</span>
+          <span className="font-bold">CodeHub</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-wider text-gray-500">
           <Link
@@ -50,12 +50,11 @@ export default function HeroPage() {
           </Link>
         </nav>
         <div className="flex items-center gap-4">
-          <Button
-            variant="primary"
-            className="rounded-full bg-blue-600 text-white hover:bg-blue-700"
-            asChild
-          >
-            <Link href="#">Download</Link>
+          <Button variant="ghost" asChild>
+            <Link href="/login">Sign In</Link>
+          </Button>
+          <Button variant="outline" className="rounded-full" asChild>
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </div>
       </header>
@@ -85,7 +84,7 @@ export default function HeroPage() {
             className="rounded-full border-gray-300 bg-white px-8 py-6 text-lg font-bold text-gray-800 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:bg-gray-100"
             asChild
           >
-            <Link href="#">Learn More</Link>
+            <Link href="/dashboard">Download</Link>
           </Button>
         </div>
       </div>

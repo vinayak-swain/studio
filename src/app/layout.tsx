@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'DVCS',
+  title: 'CodeHub',
   description: 'The Everything App for your teams.',
 };
 
