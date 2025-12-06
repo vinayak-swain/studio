@@ -26,9 +26,11 @@ export default function HeroPage() {
             <Github className="h-4 w-4" />
             Star Us
           </Link>
-          <Button variant="ghost" className="rounded-full text-white hover:bg-white/10">Sign In</Button>
-          <Button variant="outline" className="rounded-full border-white/20 bg-transparent text-white hover:bg-white hover:text-black">
-            Sign Up
+          <Button variant="ghost" className="rounded-full text-white hover:bg-white/10" asChild>
+            <Link href="/login">Sign In</Link>
+          </Button>
+          <Button variant="outline" className="rounded-full border-white/20 bg-transparent text-white hover:bg-white hover:text-black" asChild>
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </div>
       </header>
@@ -47,9 +49,12 @@ export default function HeroPage() {
             <Button
               size="lg"
               className="group relative rounded-full bg-gradient-to-r from-orange-400 to-amber-500 px-8 py-6 text-lg font-bold text-white shadow-lg shadow-orange-500/20 transition-transform duration-300 hover:-translate-y-1"
+              asChild
             >
-              See in action
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              <Link href="/dashboard">
+                See in action
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
             </Button>
             <p className="text-sm text-gray-500">No credit card required</p>
           </div>
