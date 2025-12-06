@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, GitPullRequest, Plus, Menu, Book } from 'lucide-react';
+import {
+  Bell,
+  GitPullRequest,
+  Plus,
+  Menu,
+  Book,
+  Import,
+} from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -64,6 +72,12 @@ export function DashboardHeader() {
                 <Link href="/new">
                   <Book className="mr-2 h-4 w-4" />
                   New repository
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/import">
+                  <Import className="mr-2 h-4 w-4" />
+                  Import repository
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
