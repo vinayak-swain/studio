@@ -22,11 +22,11 @@ export default function HeroPage() {
           Introducing CodeHub
         </div>
         <h1 className="text-6xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-7xl md:text-8xl">
-          A New Force in UI
+          Where Code Becomes Collaboration
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-gray-600 md:text-xl">
-          Experience a revolutionary particle-based interface that defies
-          convention and brings your projects to life.
+          From idea to production—manage repositories, collaborate with teams,
+          and deploy with confidence.
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
           <Button
