@@ -6,8 +6,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FirebaseClientProvider>
-      <div className="min-h-screen bg-[#0d1117] text-white">{children}</div>
-    </FirebaseClientProvider>
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body>
+        <FirebaseClientProvider>
+          <div className="min-h-screen bg-[#0d1117] text-white">{children}</div>
+        </FirebaseClientProvider>
+      </body>
+    </html>
   );
 }
