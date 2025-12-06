@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { Header } from '@/components/layout/header';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -11,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Nebula Dashboard',
-  description: 'Your mission control for code.',
+  title: 'Nebula',
+  description: 'The Everything App for your teams.',
 };
 
 export default function RootLayout({
@@ -26,15 +25,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className={cn('font-body antialiased', inter.variable)}>
-        <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-[#010409] to-[#0d1117]">
-          <Header />
-          <main className="flex-1">{children}</main>
-        </div>
+        <main>{children}</main>
         <Toaster />
       </body>
     </html>
