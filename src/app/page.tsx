@@ -19,7 +19,7 @@ export default function HeroPage() {
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl px-6">
         <div className="mb-4 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-600">
-          Introducing
+          Introducing CodeHub
         </div>
         <h1 className="text-6xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-7xl md:text-8xl">
           A New Force in UI
@@ -32,14 +32,6 @@ export default function HeroPage() {
           <Button
             size="lg"
             className="rounded-full bg-blue-600 px-8 py-6 text-lg font-bold text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 hover:-translate-y-1"
-            asChild
-          >
-            <Link href="/dashboard">Get Started</Link>
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="rounded-full border-gray-300 bg-white px-8 py-6 text-lg font-bold text-gray-800 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:bg-gray-100"
             asChild
           >
             <Link href="/login">Sign In</Link>
