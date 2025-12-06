@@ -8,7 +8,7 @@ export default function HeroPage() {
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background">
       <InteractiveBackground />
 
-      <header className="fixed top-0 z-20 flex h-20 w-full items-center justify-center px-6 md:px-12 lg:px-20">
+      <header className="fixed top-0 z-20 flex h-20 w-full items-center justify-start px-6 md:px-12 lg:px-20">
         <Link
           href="#"
           className="flex items-center gap-2 text-lg font-semibold text-foreground"
@@ -32,6 +32,14 @@ export default function HeroPage() {
           <Button
             size="lg"
             className="rounded-full bg-blue-600 px-8 py-6 text-lg font-bold text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 hover:-translate-y-1"
+            asChild
+          >
+            <Link href="/signup">Get Started</Link>
+          </Button>
+          <Button
+            size="lg"
+            variant="ghost"
+            className="rounded-full px-8 py-6 text-lg font-bold text-gray-600 transition-colors duration-300 hover:text-gray-900"
             asChild
           >
             <Link href="/login">Sign In</Link>
