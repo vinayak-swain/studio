@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Nebula',
+  title: 'DVCS',
   description: 'The Everything App for your teams.',
 };
 

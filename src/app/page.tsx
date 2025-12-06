@@ -13,7 +13,7 @@ export default function HeroPage() {
       <header className="fixed top-0 z-20 flex h-20 w-full items-center justify-between px-6 md:px-12 lg:px-20 backdrop-blur-sm bg-black/10">
         <Link href="#" className="flex items-center gap-3 text-lg font-semibold text-white">
           <Logo className="h-7 w-7" />
-          <span>Nebula</span>
+          <span>DVCS</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-wider text-gray-400">
           <Link href="#" className="hover:text-white hover:underline-offset-4 hover:underline transition-colors">Pricing</Link>
@@ -41,7 +41,7 @@ export default function HeroPage() {
             for your teams
           </h1>
           <p className="mt-6 max-w-xl text-lg text-gray-400 md:text-xl">
-            Nebula, an open-source platform, serves as an all-in-one replacement of Linear, Jira, Slack, and Notion.
+            DVCS, an open-source platform, serves as an all-in-one replacement of Linear, Jira, Slack, and Notion.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
             <Button
