@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account for the Nebula Dashboard application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership is enforced via the `userId` parameter. Allows only the authenticated user (with matching `uid`) to read or write their profile. Includes username, email, and timestamps for creation and updates.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user. This is used to enforce path-based ownership."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore data structure is designed to support the 'Nebula Dashboard' application, focusing on user authentication, dashboard content, and repository management. The structure adheres to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Since the prompt did not contain complex ownership requirements, I will use the simplest possible structure, focusing on a dedicated `/users/{userId}` collection and path-based ownership for the user profiles.\n\n**Authorization Independence:** User profile data is stored directly under `/users/{userId}`, eliminating the need for `get()` calls to parent documents to verify ownership. This also applies to any potential future subcollections under `/users/{userId}`. Any denormalization will need to be applied to any new subcollections to maintain authorization independence.\n\n**QAPs Support:** The structure supports secure `list` operations for user profiles, as rules can easily check if `request.auth.uid == userId` for any read or write operations on `/users/{userId}`. It also paves the way for future content that is owned by the user to be easily secured using path-based ownership within subcollections of `/users/{userId}`.\n\n**Scalability & Debuggability:** Path-based ownership simplifies security rules and reduces the need for complex queries. The naming conventions (e.g., `users/{userId}`) are consistent and self-documenting."
+  }
+}

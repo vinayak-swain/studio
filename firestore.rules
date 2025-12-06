@@ -1,0 +1,93 @@
+/**
+ * This ruleset enforces a strict user-ownership model for the Nebula Dashboard application.
+ *
+ * Core Philosophy:
+ * The security model is designed to be simple and highly secure, following a "deny-by-default"
+ * posture. All data is scoped to the authenticated user, meaning a user can only ever access
+ * and manage their own information. There is no concept of public data or shared access in
+ * this version.
+ *
+ * Data Structure:
+ * All user-specific data is stored under the top-level `/users` collection. Each user has a
+ * single document, where the document ID is the user's authentication UID.
+ *   - /users/{userId} -> User profile document
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only read, update, or delete their own user document. They cannot
+ *   access another user's document for any reason.
+ * - No User Enumeration: Listing the entire `/users` collection is explicitly disallowed to
+ *   prevent potential attackers from discovering the application's user base.
+ * - Path-based Ownership: Authorization is determined primarily by matching the authenticated
+ *   user's UID (`request.auth.uid`) with the `userId` wildcard in the document path.
+ * - Relational Integrity: On creation, the user document must contain an `id` field that
+ *   matches the document's path `userId`. This field is immutable and cannot be changed on
+ *   update, ensuring the link between the document and its owner is permanent.
+ *
+ * Denormalization for Authorization:
+ * Authorization is self-contained within the `/users/{userId}` path. The document's internal `id`
+ * field is denormalized to match the path `userId`, creating a permanent and verifiable link
+ * between the resource and its owner without needing any extra database reads (`get()` calls).
+ *
+ * Structural Segregation:
+ * Not applicable in this version, as there are no mixed public/private data collections.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for improved readability and reusability.
+
+    /**
+     * Checks if the current request is from an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Validates that the requesting user's UID matches the provided userId.
+     * This is the primary function for enforcing document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Ensures an update or delete request targets an existing document
+     * and that the requesting user is the owner. This prevents modifying or
+     * deleting non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description
+     *   Secures user profile documents. A user can create their own profile, and once
+     *   created, only that user can read, update, or delete it.
+     * @path
+     *   /users/{userId}
+     * @allow
+     *   (create) Authenticated user 'user_abc' can create a document at '/users/user_abc'.
+     * @deny
+     *   (get) Authenticated user 'user_abc' is denied access to '/users/user_xyz'.
+     * @principle
+     *   Enforces strict path-based ownership for a user's own data tree.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Disallow listing all users to prevent user enumeration.
+      
+      // A user can create their own profile document.
+      // The document's internal `id` must match the user's auth UID for integrity.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      
+      // The owner can update their profile.
+      // The internal `id` field must not be changed after creation.
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      
+      // The owner can delete their profile document.
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
