@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0d1117]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <p>Loading...</p>
       </div>
     );
@@ -39,25 +39,25 @@ export default function DashboardPage() {
           <main className="flex-1 space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-xl font-semibold">Home</h1>
-              <a href="#" className="text-xs text-blue-400 hover:underline">
+              <a href="#" className="text-xs text-blue-600 hover:underline">
                 Try the new dashboard experience
               </a>
             </div>
-            <Card className="bg-[#161b22] border-[#30363d]">
+            <Card>
               <CardContent className="p-4">
                 <Input
                   placeholder="Ask anything"
-                  className="border-none bg-transparent placeholder-gray-400 focus:ring-0"
+                  className="border-none bg-transparent placeholder-muted-foreground focus:ring-0"
                 />
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Add repositories, files, and spaces
                 </p>
                 <div className="mt-4 flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full border-[#30363d] bg-transparent hover:bg-[#21262d]">
+                  <Button variant="outline" size="sm" className="rounded-full">
                     <Milestone className="mr-2 h-4 w-4" />
                     Task (New)
                   </Button>
-                  <Button variant="outline" size="sm" className="rounded-full border-[#30363d] bg-transparent hover:bg-[#21262d]">
+                  <Button variant="outline" size="sm" className="rounded-full">
                     <GitPullRequest className="mr-2 h-4 w-4" />
                     Create issue
                   </Button>

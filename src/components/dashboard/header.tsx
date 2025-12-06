@@ -19,7 +19,7 @@ export function DashboardHeader() {
   const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar-4');
 
   return (
-    <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-[#30363d] bg-[#161b22] px-4 lg:px-6">
+    <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <Menu className="h-4 w-4" />
@@ -35,7 +35,7 @@ export function DashboardHeader() {
             <Input
               type="search"
               placeholder="Type / to search"
-              className="w-full rounded-lg border-[#30363d] bg-[#0d1117] pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+              className="w-full rounded-lg bg-muted pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
             />
           </div>
         </div>
