@@ -14,6 +14,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupAction,
+  SidebarMenuBadge,
 } from '@/components/ui/sidebar';
 import {
   Book,
