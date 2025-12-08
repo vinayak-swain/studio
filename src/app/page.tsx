@@ -24,7 +24,7 @@ export default function HeroPage() {
           <div className="mb-4 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-600">
             Introducing CodeHub
           </div>
-          <h1 className="text-6xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-7xl md:text-8xl">
+          <h1 className="text-5xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-6xl md:text-7xl">
             Where Code Becomes Collaboration
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-gray-600 md:text-xl">

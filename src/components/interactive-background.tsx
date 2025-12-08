@@ -36,7 +36,7 @@ export function InteractiveBackground() {
       constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 2 + 1;
+        this.size = Math.random() * 1.5 + 0.5;
         this.baseX = this.x;
         this.baseY = this.y;
         this.density = Math.random() * 30 + 10;
