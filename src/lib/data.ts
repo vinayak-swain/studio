@@ -70,3 +70,30 @@ export const changelogItems = [
     title: 'Dependabot now surface alerts for vulnerable GitHub Actions',
   },
 ];
+
+export const templateCards = [
+    {
+        icon: 'react',
+        title: 'React',
+        author: 'GitHub',
+        description: 'A classic create-react-app template with a simple folder structure.',
+    },
+    {
+        icon: 'nextjs',
+        title: 'Next.js',
+        author: 'Vercel',
+        description: 'A feature-rich template for Next.js applications with pre-configured settings.',
+    },
+    {
+        icon: 'blank',
+        title: 'Blank',
+        author: 'GitHub',
+        description: 'A completely empty template for starting a project from scratch.',
+    },
+    {
+        icon: 'express',
+        title: 'Express',
+        author: 'Community',
+        description: 'A minimal Express.js template for building back-end applications.',
+    }
+]
