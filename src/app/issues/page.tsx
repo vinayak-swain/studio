@@ -95,7 +95,7 @@ function IssuesPageContent() {
                 <SidebarGroupLabel className="flex items-center">
                   Views
                 </SidebarGroupLabel>
-                <SidebarGroupAction>
+                <SidebarGroupAction asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6">
                     <Plus />
                   </Button>
