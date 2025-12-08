@@ -108,8 +108,10 @@ export function DashboardHeader() {
   const { setTheme } = useTheme();
 
   const signOut = () => {
-    firebaseSignOut(auth);
-    router.push('/login');
+    if (auth) {
+      firebaseSignOut(auth);
+      router.push('/login');
+    }
   };
 
   return (
