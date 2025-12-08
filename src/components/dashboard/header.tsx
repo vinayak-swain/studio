@@ -65,11 +65,11 @@ import {
 
 const primaryNav = [
   { name: 'Home', icon: Home, href: '/dashboard', current: true },
-  { name: 'Issues', icon: Book, href: '#', current: false },
-  { name: 'Pull requests', icon: GitPullRequest, href: '#', current: false },
-  { name: 'Projects', icon: Box, href: '#', current: false },
-  { name: 'Discussions', icon: MessageSquare, href: '#', current: false },
-  { name: 'Codespaces', icon: Rocket, href: '#', current: false },
+  { name: 'Issues', icon: Book, href: '/issues', current: false },
+  { name: 'Pull requests', icon: GitPullRequest, href: '/pulls', current: false },
+  { name: 'Projects', icon: Box, href: '/projects', current: false },
+  { name: 'Discussions', icon: MessageSquare, href: '/discussions', current: false },
+  { name: 'Codespaces', icon: Rocket, href: '/codespaces', current: false },
   { name: 'Copilot', icon: Cpu, href: '#', current: false },
 ];
 
@@ -274,13 +274,15 @@ export function DashboardHeader() {
             </DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <Button asChild
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full"
                 >
-                  <GitPullRequest className="h-4 w-4" />
-                  <span className="sr-only">Pull requests</span>
+                  <Link href="/pulls">
+                    <GitPullRequest className="h-4 w-4" />
+                    <span className="sr-only">Pull requests</span>
+                  </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -289,13 +291,15 @@ export function DashboardHeader() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <Button asChild
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full"
                 >
-                  <BookCopy className="h-4 w-4" />
-                  <span className="sr-only">Issues</span>
+                  <Link href="/issues">
+                    <BookCopy className="h-4 w-4" />
+                    <span className="sr-only">Issues</span>
+                  </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
