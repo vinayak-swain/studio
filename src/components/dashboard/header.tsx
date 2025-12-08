@@ -26,6 +26,9 @@ import {
   HelpCircle,
   FlaskConical,
   BookCopy,
+  Monitor,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -40,6 +43,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   Sheet,
@@ -62,13 +69,24 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTheme } from 'next-themes';
 
 const primaryNav = [
   { name: 'Home', icon: Home, href: '/dashboard', current: true },
-  { name: 'Issues', icon: Book, href: '/issues', current: false },
-  { name: 'Pull requests', icon: GitPullRequest, href: '/pulls', current: false },
+  { name: 'Issues', icon: BookCopy, href: '/issues', current: false },
+  {
+    name: 'Pull requests',
+    icon: GitPullRequest,
+    href: '/pulls',
+    current: false,
+  },
   { name: 'Projects', icon: Box, href: '/projects', current: false },
-  { name: 'Discussions', icon: MessageSquare, href: '/discussions', current: false },
+  {
+    name: 'Discussions',
+    icon: MessageSquare,
+    href: '/discussions',
+    current: false,
+  },
   { name: 'Codespaces', icon: Rocket, href: '/codespaces', current: false },
   { name: 'Copilot', icon: Cpu, href: '#', current: false },
 ];
@@ -83,8 +101,11 @@ export function DashboardHeader() {
   const { user } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar-4');
+  const userAvatar = PlaceHolderImages.find(
+    (img) => img.id === 'user-avatar-4'
+  );
   const [open, setOpen] = React.useState(false);
+  const { setTheme } = useTheme();
 
   const signOut = () => {
     firebaseSignOut(auth);
@@ -274,7 +295,8 @@ export function DashboardHeader() {
             </DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button asChild
+                <Button
+                  asChild
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full"
@@ -291,7 +313,8 @@ export function DashboardHeader() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button asChild
+                <Button
+                  asChild
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full"
@@ -351,6 +374,28 @@ export function DashboardHeader() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Monitor className="mr-2 h-4 w-4" />
+                    <span>Appearance</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => setTheme('light')}>
+                        <Sun className="mr-2 h-4 w-4" />
+                        <span>Light</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme('dark')}>
+                        <Moon className="mr-2 h-4 w-4" />
+                        <span>Dark</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme('system')}>
+                        <Monitor className="mr-2 h-4 w-4" />
+                        <span>System</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuItem>
                   <FlaskConical className="mr-2 h-4 w-4" />
                   <span>Feature preview</span>
