@@ -29,7 +29,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-sans antialiased dark', inter.variable)}>
+      <body className={cn('font-sans antialiased', inter.variable)}>
           <main>{children}</main>
           <Toaster />
       </body>
