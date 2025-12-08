@@ -13,6 +13,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupAction,
+  SidebarMenuBadge,
 } from '@/components/ui/sidebar';
 import {
   Plus,
@@ -29,10 +30,10 @@ import { DashboardHeader } from '@/components/dashboard/header';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const issuesNav = [
-  { name: 'Assigned', icon: User },
-  { name: 'Created by me', icon: Smile },
-  { name: 'Mentioned', icon: AtSign },
-  { name: 'Recent activity', icon: Clock },
+  { name: 'Assigned', icon: User, count: 0 },
+  { name: 'Created by me', icon: Smile, count: 0 },
+  { name: 'Mentioned', icon: AtSign, count: 0 },
+  { name: 'Recent activity', icon: Clock, count: 0 },
 ];
 
 function IssuesPageContent() {
@@ -42,7 +43,6 @@ function IssuesPageContent() {
       <div className="flex flex-1 overflow-hidden">
         <SidebarProvider defaultOpen={true}>
           <Sidebar
-            collapsible="icon"
             variant="sidebar"
             className="hidden md:flex"
           >
@@ -62,8 +62,13 @@ function IssuesPageContent() {
                         isActive={item.name === 'Assigned'}
                         className="data-[active=true]:border-l-2 data-[active=true]:border-blue-500 data-[active=true]:rounded-none"
                       >
-                        <item.icon className="h-5 w-5 text-muted-foreground" />
-                        <span>{item.name}</span>
+                        <div className="flex w-full items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <item.icon className="h-5 w-5 text-muted-foreground" />
+                            <span>{item.name}</span>
+                          </div>
+                          <SidebarMenuBadge>{item.count}</SidebarMenuBadge>
+                        </div>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
