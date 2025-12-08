@@ -4,7 +4,9 @@ import * as React from 'react';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -70,7 +72,12 @@ export default function SidebarDemoPage() {
               <SheetHeader className="flex flex-row items-center justify-between border-b border-border p-4">
                   <div className="flex items-center gap-3">
                     <Github className="h-8 w-8 rounded-full" />
-                    <span className="text-sm font-semibold">Dashboard</span>
+                    <SheetTitle>
+                      <span className="text-sm font-semibold">Dashboard</span>
+                    </SheetTitle>
+                    <SheetDescription className="sr-only">
+                      A sidebar with the main navigation links for the dashboard.
+                    </SheetDescription>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="h-8 w-8">
                      <X className="h-5 w-5" />

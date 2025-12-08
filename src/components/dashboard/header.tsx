@@ -36,7 +36,9 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import * as React from 'react';
@@ -83,7 +85,12 @@ export function DashboardHeader() {
               <SheetHeader className="flex flex-row items-center justify-between border-b border-border p-4">
                 <div className="flex items-center gap-3">
                   <Github className="h-8 w-8 rounded-full" />
-                  <span className="text-sm font-semibold">Dashboard</span>
+                  <SheetTitle>
+                    <span className="text-sm font-semibold">Dashboard</span>
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">
+                    A sidebar with the main navigation links for the dashboard.
+                  </SheetDescription>
                 </div>
                 <Button
                   variant="ghost"
