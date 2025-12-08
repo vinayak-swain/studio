@@ -17,103 +17,101 @@ export function InteractiveBackground() {
     const mouse = {
       x: width / 2,
       y: height / 2,
-      radius: 80,
     };
 
     const particles: Particle[] = [];
-    const particleCount = 400;
     const blueShades = ['#8ECAE6', '#219EBC', '#023047', '#126782'];
 
     class Particle {
       x: number;
       y: number;
       size: number;
-      baseX: number;
-      baseY: number;
-      density: number;
+      speedX: number;
+      speedY: number;
       color: string;
+      life: number;
+      maxLife: number;
 
       constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
         this.size = Math.random() * 1.5 + 0.5;
-        this.baseX = this.x;
-        this.baseY = this.y;
-        this.density = Math.random() * 30 + 10;
+        this.speedX = Math.random() * 2 - 1;
+        this.speedY = Math.random() * 2 - 1;
         this.color = blueShades[Math.floor(Math.random() * blueShades.length)];
+        this.maxLife = Math.random() * 100 + 50;
+        this.life = this.maxLife;
       }
 
       draw() {
         if (!ctx) return;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
       }
 
       update() {
-        if (!ctx) return;
+        this.life--;
+        if (this.life <= 0) return;
+
+        // Move towards cursor
         const dx = mouse.x - this.x;
         const dy = mouse.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const forceDirectionX = dx / distance;
-        const forceDirectionY = dy / distance;
-        const maxDistance = mouse.radius;
-        const force = (maxDistance - distance) / maxDistance;
-        const directionX = forceDirectionX * force * this.density;
-        const directionY = forceDirectionY * force * this.density;
 
-        if (distance < mouse.radius) {
-          this.x -= directionX;
-          this.y -= directionY;
-        } else {
-          if (this.x !== this.baseX) {
-            const dx = this.x - this.baseX;
-            this.x -= dx / 10;
-          }
-          if (this.y !== this.baseY) {
-            const dy = this.y - this.baseY;
-            this.y -= dy / 10;
-          }
+        if (distance > 1) {
+            this.x += dx * 0.03;
+            this.y += dy * 0.03;
         }
+
+        // Add some random movement
+        this.x += this.speedX;
+        this.y += this.speedY;
       }
     }
 
-    function init() {
-      particles.length = 0;
-      for (let i = 0; i < particleCount; i++) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        particles.push(new Particle(x, y));
-      }
+    function addParticles() {
+        for (let i = 0; i < 3; i++) {
+            particles.push(new Particle(mouse.x, mouse.y));
+        }
     }
 
     function animate() {
       if (!ctx) return;
       ctx.clearRect(0, 0, width, height);
-      for (const particle of particles) {
-        particle.update();
-        particle.draw();
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+        } else {
+          p.update();
+          p.draw();
+        }
       }
+
       requestAnimationFrame(animate);
     }
 
     const handleMouseMove = (event: MouseEvent) => {
       mouse.x = event.clientX;
       mouse.y = event.clientY;
+      addParticles();
     };
 
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      init();
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('resize', handleResize);
 
-    init();
     animate();
 
     return () => {
