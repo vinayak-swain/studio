@@ -65,12 +65,11 @@ function CodespacesPageContent() {
               <h2 className="text-xl font-semibold">
                 Explore quick start templates
               </h2>
-              <Link
-                href="#"
-                className="text-sm text-blue-500 hover:underline"
+              <span
+                className="text-sm text-blue-500 hover:underline cursor-pointer"
               >
                 See all
-              </Link>
+              </span>
             </div>
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {templateCards.map((card, index) => (
