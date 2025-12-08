@@ -25,6 +25,7 @@ import {
   LogOut,
   HelpCircle,
   FlaskConical,
+  BookCopy,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -220,10 +221,6 @@ export function DashboardHeader() {
             <Bell className="h-4 w-4" />
             <span className="sr-only">Toggle notifications</span>
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <GitPullRequest className="h-4 w-4" />
-            <span className="sr-only">Pull requests</span>
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -250,6 +247,14 @@ export function DashboardHeader() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+            <GitPullRequest className="h-4 w-4" />
+            <span className="sr-only">Pull requests</span>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+            <BookCopy className="h-4 w-4" />
+            <span className="sr-only">Issues</span>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="h-8 w-8 cursor-pointer">
