@@ -9,7 +9,7 @@ export default function DashboardLayout({
 }) {
   return (
     <FirebaseClientProvider>
-      <div className="min-h-screen bg-background text-foreground dark">{children}</div>
+      <div className="min-h-screen bg-background text-foreground">{children}</div>
     </FirebaseClientProvider>
   );
 }
