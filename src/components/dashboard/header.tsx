@@ -56,6 +56,12 @@ import { repositories } from '@/lib/data';
 import { signOut as firebaseSignOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Badge } from '../ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const primaryNav = [
   { name: 'Home', icon: Home, href: '/dashboard', current: true },
@@ -216,107 +222,151 @@ export function DashboardHeader() {
             />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">Toggle notifications</span>
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="sr-only">New</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/new">
+        <TooltipProvider>
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="sr-only">Toggle notifications</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Notifications</p>
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="sr-only">New</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Create new...</p>
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href="/new">
+                    <Book className="mr-2 h-4 w-4" />
+                    New repository
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/import">
+                    <Import className="mr-2 h-4 w-4" />
+                    Import repository
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                >
+                  <GitPullRequest className="h-4 w-4" />
+                  <span className="sr-only">Pull requests</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Pull requests</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                >
+                  <BookCopy className="h-4 w-4" />
+                  <span className="sr-only">Issues</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Issues</p>
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-8 w-8 cursor-pointer">
+                  <AvatarImage
+                    src={userAvatar?.imageUrl}
+                    alt={user?.email || 'User'}
+                  />
+                  <AvatarFallback>
+                    {user?.email?.[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Signed in as
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>Your profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
                   <Book className="mr-2 h-4 w-4" />
-                  New repository
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/import">
-                  <Import className="mr-2 h-4 w-4" />
-                  Import repository
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <GitPullRequest className="h-4 w-4" />
-            <span className="sr-only">Pull requests</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <BookCopy className="h-4 w-4" />
-            <span className="sr-only">Issues</span>
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarImage
-                  src={userAvatar?.imageUrl}
-                  alt={user?.email || 'User'}
-                />
-                <AvatarFallback>
-                  {user?.email?.[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Signed in as
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <UserIcon className="mr-2 h-4 w-4" />
-                <span>Your profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Book className="mr-2 h-4 w-4" />
-                <span>Your repositories</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Star className="mr-2 h-4 w-4" />
-                <span>Your stars</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Box className="mr-2 h-4 w-4" />
-                <span>Your projects</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <FlaskConical className="mr-2 h-4 w-4" />
-                <span>Feature preview</span>
-                <Badge variant="outline" className="ml-auto">New</Badge>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HelpCircle className="mr-2 h-4 w-4" />
-                <span>Help</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sign out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                  <span>Your repositories</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Star className="mr-2 h-4 w-4" />
+                  <span>Your stars</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Box className="mr-2 h-4 w-4" />
+                  <span>Your projects</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <FlaskConical className="mr-2 h-4 w-4" />
+                  <span>Feature preview</span>
+                  <Badge variant="outline" className="ml-auto">
+                    New
+                  </Badge>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  <span>Help</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </TooltipProvider>
       </div>
     </header>
   );
