@@ -46,6 +46,7 @@ import { Input } from '@/components/ui/input';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const issuesNav = [
   { name: 'Assigned', icon: CheckCircle, count: 0 },
@@ -55,7 +56,7 @@ const issuesNav = [
   { name: 'Recent activity', icon: Clock, count: 0 },
 ];
 
-export default function IssuesPage() {
+function IssuesPageContent() {
   const isMobile = useIsMobile();
   return (
     <div className="flex h-screen flex-col">
@@ -141,6 +142,15 @@ export default function IssuesPage() {
     </div>
   );
 }
+
+export default function IssuesPage() {
+  return (
+    <FirebaseClientProvider>
+      <IssuesPageContent />
+    </FirebaseClientProvider>
+  );
+}
+
 
 function Edit(props: React.SVGProps<SVGSVGElement>) {
   return (
