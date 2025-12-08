@@ -13,7 +13,6 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupAction,
-  SidebarMenuBadge,
 } from '@/components/ui/sidebar';
 import {
   Plus,
@@ -41,7 +40,7 @@ function IssuesPageContent() {
     <div className="flex h-screen flex-col">
       <DashboardHeader />
       <div className="flex flex-1 overflow-hidden">
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={true}>
           <Sidebar
             collapsible="icon"
             variant="sidebar"
