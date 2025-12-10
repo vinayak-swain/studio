@@ -84,7 +84,7 @@ const primaryNav = [
 ];
 
 const secondaryNav = [
-  { name: 'Explore', icon: Compass, href: '#' },
+  { name: 'Explore', icon: Compass, href: '/explore' },
   { name: 'Marketplace', icon: Store, href: '#' },
   { name: 'MCP registry', icon: Container, href: '#' },
 ];
