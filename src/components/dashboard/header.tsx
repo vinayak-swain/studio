@@ -26,9 +26,6 @@ import {
   HelpCircle,
   FlaskConical,
   BookCopy,
-  Monitor,
-  Sun,
-  Moon,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -43,10 +40,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   Sheet,
@@ -69,7 +62,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useTheme } from 'next-themes';
 
 const primaryNav = [
   { name: 'Home', icon: Home, href: '/dashboard', current: true },
@@ -105,7 +97,6 @@ export function DashboardHeader() {
     (img) => img.id === 'user-avatar-4'
   );
   const [open, setOpen] = React.useState(false);
-  const { setTheme } = useTheme();
 
   const signOut = () => {
     if (auth) {
@@ -376,28 +367,6 @@ export function DashboardHeader() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Monitor className="mr-2 h-4 w-4" />
-                    <span>Appearance</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem onClick={() => setTheme('light')}>
-                        <Sun className="mr-2 h-4 w-4" />
-                        <span>Light</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme('dark')}>
-                        <Moon className="mr-2 h-4 w-4" />
-                        <span>Dark</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme('system')}>
-                        <Monitor className="mr-2 h-4 w-4" />
-                        <span>System</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
                 <DropdownMenuItem>
                   <FlaskConical className="mr-2 h-4 w-4" />
                   <span>Feature preview</span>
