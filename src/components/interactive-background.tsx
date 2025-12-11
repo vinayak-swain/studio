@@ -94,6 +94,30 @@ export function InteractiveBackground() {
           p.draw();
         }
       }
+      
+      // Draw lines between nearby particles
+      for (let i = 0; i < particles.length; i++) {
+          for (let j = i; j < particles.length; j++) {
+              const p1 = particles[i];
+              const p2 = particles[j];
+              const dx = p1.x - p2.x;
+              const dy = p1.y - p2.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < 100) {
+                  const opacity = 1 - (distance / 100);
+                  ctx.save();
+                  ctx.globalAlpha = opacity * Math.min(p1.life / p1.maxLife, p2.life / p2.maxLife);
+                  ctx.strokeStyle = p1.color;
+                  ctx.lineWidth = 0.5;
+                  ctx.beginPath();
+                  ctx.moveTo(p1.x, p1.y);
+                  ctx.lineTo(p2.x, p2.y);
+                  ctx.stroke();
+                  ctx.restore();
+              }
+          }
+      }
 
       requestAnimationFrame(animate);
     }
