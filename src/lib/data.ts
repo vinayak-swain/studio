@@ -1,4 +1,5 @@
 import { PlaceHolderImages } from './placeholder-images';
+import { Star, Bot, AppWindow, Zap } from 'lucide-react';
 
 const findImage = (id: string) => PlaceHolderImages.find(img => img.id === id)?.imageUrl || '';
 
@@ -97,3 +98,43 @@ export const templateCards = [
         description: 'A minimal Express.js template for building back-end applications.',
     }
 ]
+
+export const marketplaceCategories = [
+    { name: 'Featured', icon: Star, active: false },
+    { name: 'Models', icon: Bot, active: true },
+    { name: 'Apps', icon: AppWindow, active: false },
+    { name: 'Actions', icon: Zap, active: false },
+]
+
+export const marketplaceItems = [
+    {
+        icon: Bot,
+        title: 'Code Pilot',
+        author: 'Nebula',
+        description: 'AI-powered code completion and suggestions to boost your productivity.',
+        type: 'Model',
+    },
+    {
+        icon: Bot,
+        title: 'ImageGen',
+        author: 'Artifex',
+        description: 'Generate stunning visuals and marketing assets with a simple text prompt.',
+        type: 'Model',
+    },
+    {
+        icon: AppWindow,
+        title: 'DeployMaster',
+        author: 'ShipIt',
+        description: 'Seamlessly deploy your applications to any cloud provider with one click.',
+        type: 'App',
+    },
+    {
+        icon: AppWindow,
+        title: 'TaskBoard',
+        author: 'Productiv',
+        description: 'A collaborative task management tool that integrates with your repositories.',
+        type: 'App',
+    }
+]
+
+    

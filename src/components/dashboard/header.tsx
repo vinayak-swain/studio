@@ -85,7 +85,7 @@ const primaryNav = [
 
 const secondaryNav = [
   { name: 'Explore', icon: Compass, href: '/explore' },
-  { name: 'Marketplace', icon: Store, href: '#' },
+  { name: 'Marketplace', icon: Store, href: '/marketplace' },
   { name: 'MCP registry', icon: Container, href: '#' },
 ];
 
@@ -391,3 +391,5 @@ export function DashboardHeader() {
     </header>
   );
 }
+
+    
