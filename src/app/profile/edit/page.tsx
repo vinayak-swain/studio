@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,22 +14,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/firebase';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
-import { Pencil } from 'lucide-react';
+import { MoreVertical, Pencil } from 'lucide-react';
 
 function EditProfilePageContent() {
   const { user } = useUser();
-  const userAvatar = PlaceHolderImages.find(
-    (img) => img.id === 'user-avatar-4'
+  const [avatarPreview, setAvatarPreview] = React.useState<string | null>(
+    user?.photoURL || null
   );
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleRemovePhoto = () => {
+    setAvatarPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*"
+      />
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {/* Left Column: Edit Form */}
         <aside className="col-span-1">
@@ -36,19 +69,40 @@ function EditProfilePageContent() {
             <div className="relative">
               <Avatar className="h-48 w-48 md:h-64 md:w-64">
                 <AvatarImage
-                  src={userAvatar?.imageUrl}
+                  src={avatarPreview || ''}
                   alt={user?.email || 'User'}
                 />
-                <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                <AvatarFallback>
+                  {user?.email?.[0].toUpperCase()}
+                </AvatarFallback>
               </Avatar>
-               <Button
-                variant="outline"
-                size="icon"
-                className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-background/70 backdrop-blur-sm transition-opacity"
-              >
-                <Pencil className="h-5 w-5" />
-                <span className="sr-only">Edit profile picture</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-background/70 backdrop-blur-sm"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                    <span className="sr-only">Edit profile picture</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleUploadClick}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Upload a photo
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onClick={handleUploadClick}>
+                    Change photo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleRemovePhoto}
+                    className="text-destructive"
+                  >
+                    Remove photo
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <form className="mt-4 w-full space-y-6">
               <div>
@@ -63,10 +117,11 @@ function EditProfilePageContent() {
                   defaultValue="Building the future of code collaboration."
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  You can @mention other users and organizations to link to them.
+                  You can @mention other users and organizations to link to
+                  them.
                 </p>
               </div>
-               <div>
+              <div>
                 <Label htmlFor="pronouns">Pronouns</Label>
                 <Select>
                   <SelectTrigger id="pronouns">
@@ -93,7 +148,7 @@ function EditProfilePageContent() {
                 <Input id="website" type="url" />
               </div>
 
-               <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Checkbox id="display-time" />
                 <Label htmlFor="display-time" className="text-sm font-normal">
                   Display current local time
@@ -103,17 +158,19 @@ function EditProfilePageContent() {
               <div>
                 <h3 className="text-sm font-semibold">Social accounts</h3>
                 <div className="mt-2 space-y-2">
-                    <Input placeholder="Link to social profile" />
-                    <Input placeholder="Link to social profile" />
-                    <Input placeholder="Link to social profile" />
-                    <Input placeholder="Link to social profile" />
+                  <Input placeholder="Link to social profile" />
+                  <Input placeholder="Link to social profile" />
+                  <Input placeholder="Link to social profile" />
+                  <Input placeholder="Link to social profile" />
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button className="bg-green-600 text-white hover:bg-green-700">Save</Button>
+                <Button className="bg-green-600 text-white hover:bg-green-700">
+                  Save
+                </Button>
                 <Button variant="outline" asChild>
-                    <Link href="/profile">Cancel</Link>
+                  <Link href="/profile">Cancel</Link>
                 </Button>
               </div>
             </form>
@@ -160,8 +217,8 @@ function EditProfilePageContent() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base font-semibold">
-                  {contributionData.totalContributions} contributions in the last
-                  year
+                  {contributionData.totalContributions} contributions in the
+                  last year
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -202,5 +259,5 @@ function EditProfilePageContent() {
 }
 
 export default function EditProfilePage() {
-    return <EditProfilePageContent />;
+  return <EditProfilePageContent />;
 }
