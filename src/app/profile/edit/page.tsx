@@ -25,7 +25,7 @@ import { useAuth, useUser } from '@/firebase';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
-import { MoreVertical, Pencil } from 'lucide-react';
+import { MoreVertical, Pencil, User as UserIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -159,7 +159,7 @@ function EditProfilePageContent() {
                   alt={user?.email || 'User'}
                 />
                 <AvatarFallback>
-                  {user?.displayName?.[0].toUpperCase() || user?.email?.[0].toUpperCase()}
+                  <UserIcon className="h-24 w-24 text-muted-foreground" />
                 </AvatarFallback>
               </Avatar>
               <DropdownMenu>
