@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,6 +19,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
+import { Pencil } from 'lucide-react';
 
 function EditProfilePageContent() {
   const { user } = useUser();
@@ -33,13 +33,23 @@ function EditProfilePageContent() {
         {/* Left Column: Edit Form */}
         <aside className="col-span-1">
           <div className="flex flex-col items-center md:items-start">
-            <Avatar className="h-48 w-48 md:h-64 md:w-64">
-              <AvatarImage
-                src={userAvatar?.imageUrl}
-                alt={user?.email || 'User'}
-              />
-              <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="h-48 w-48 md:h-64 md:w-64">
+                <AvatarImage
+                  src={userAvatar?.imageUrl}
+                  alt={user?.email || 'User'}
+                />
+                <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+               <Button
+                variant="outline"
+                size="icon"
+                className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-background/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+              >
+                <Pencil className="h-5 w-5" />
+                <span className="sr-only">Edit profile picture</span>
+              </Button>
+            </div>
             <form className="mt-4 w-full space-y-6">
               <div>
                 <Label htmlFor="name">Name</Label>
