@@ -40,6 +40,8 @@ import {
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { initializeFirebase } from '@/firebase';
 
 const profileFormSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
@@ -114,10 +116,21 @@ function EditProfilePageContent() {
     if (!auth?.currentUser) return;
 
     try {
+      let photoURL = auth.currentUser.photoURL;
+
+      if (avatarFile) {
+        const { firebaseApp } = initializeFirebase();
+        const storage = getStorage(firebaseApp);
+        const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
+        await uploadBytes(storageRef, avatarFile);
+        photoURL = await getDownloadURL(storageRef);
+      } else if (avatarPreview === null) {
+        photoURL = null;
+      }
+
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        // In a real app, you would upload avatarFile to Firebase Storage
-        // and then update photoURL with the returned download URL.
+        photoURL: photoURL,
       });
 
       // In a real app, you would also update the bio in Firestore.
