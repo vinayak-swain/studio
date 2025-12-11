@@ -30,8 +30,8 @@ function ProfilePageContent() {
               <h1 className="text-2xl font-bold">{user?.displayName || user?.email?.split('@')[0]}</h1>
               <p className="text-lg text-muted-foreground">{user?.email}</p>
               <p className="mt-2 text-sm">Building the future of code collaboration.</p>
-              <Button variant="outline" className="mt-4 w-full">
-                Edit profile
+              <Button variant="outline" className="mt-4 w-full" asChild>
+                <Link href="/profile/edit">Edit profile</Link>
               </Button>
             </div>
           </div>
