@@ -81,6 +81,10 @@ function EditProfilePageContent() {
       form.reset({
         name: user.displayName || '',
         bio: 'Building the future of code collaboration.',
+        pronouns: '',
+        company: '',
+        location: '',
+        website: '',
       });
       setAvatarPreview(user.photoURL || null);
     }
@@ -107,12 +111,13 @@ function EditProfilePageContent() {
   };
 
   async function onSubmit(data: ProfileFormValues) {
-    if (!user || !auth) return;
+    if (!auth?.currentUser) return;
 
     try {
-      await updateProfile(auth.currentUser!, {
+      await updateProfile(auth.currentUser, {
         displayName: data.name,
-        // photoURL would be updated here after uploading avatarFile to storage
+        // In a real app, you would upload avatarFile to Firebase Storage
+        // and then update photoURL with the returned download URL.
       });
 
       // In a real app, you would also update the bio in Firestore.
