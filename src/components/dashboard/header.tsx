@@ -346,9 +346,11 @@ export function DashboardHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <UserIcon className="mr-2 h-4 w-4" />
-                  <span>Your profile</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>Your profile</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Book className="mr-2 h-4 w-4" />

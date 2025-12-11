@@ -137,4 +137,35 @@ export const marketplaceItems = [
     }
 ]
 
+export const popularRepositories = [
+  {
+    name: 'movie-web',
+    description: 'A sleek and modern web application for streaming movies and TV shows.',
+    language: 'TypeScript',
+    languageColor: 'bg-blue-500',
+  },
+  {
+    name: 'twenty',
+    description: 'A modern CRM that organizes your customer data and streamlines your sales process.',
+    language: 'TypeScript',
+    languageColor: 'bg-blue-500',
+  },
+];
+
+export const contributionData = {
+  totalContributions: 4,
+  contributionDays: [
+    { date: '2025-11-30', count: 0 }, { date: '2025-12-01', count: 2 }, { date: '2025-12-02', count: 0 },
+    { date: '2025-12-03', count: 0 }, { date: '2025-12-04', count: 1 }, { date: '2025-12-05', count: 0 },
+    { date: '2025-12-06', count: 0 }, { date: '2025-12-07', count: 0 }, { date: '2025-12-08', count: 0 },
+    { date: '2025-12-09', count: 0 }, { date: '2025-12-10', count: 1 }, { date: '2025-12-11', count: 0 },
+    { date: '2025-12-12', count: 0 }, { date: '2025-12-13', count: 0 }, { date: '2025-12-14', count: 0 },
+    { date: '2025-12-15', count: 0 }, { date: '2025-12-16', count: 0 }, { date: '2025-12-17', count: 0 },
+    { date: '2025-12-18', count: 0 }, { date: '2025-12-19', count: 0 }, { date: '2025-12-20', count: 0 },
+    { date: '2025-12-21', count: 0 }, { date: '2025-12-22', count: 0 }, { date: '2025-12-23', count: 0 },
+    { date: '2025-12-24', count: 0 }, { date: '2025-12-25', count: 0 }, { date: '2025-12-26', count: 0 },
+    { date: '2025-12-27', count: 0 }, { date: '2025-12-28', count: 0 }, { date: '2025-12-29', count: 0 },
+    { date: '2025-12-30', count: 0 }, { date: '2025-12-31', count: 0 },
+  ],
+};
     
