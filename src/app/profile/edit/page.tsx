@@ -33,7 +33,7 @@ function EditProfilePageContent() {
         {/* Left Column: Edit Form */}
         <aside className="col-span-1">
           <div className="flex flex-col items-center md:items-start">
-            <div className="relative group">
+            <div className="relative">
               <Avatar className="h-48 w-48 md:h-64 md:w-64">
                 <AvatarImage
                   src={userAvatar?.imageUrl}
@@ -44,7 +44,7 @@ function EditProfilePageContent() {
                <Button
                 variant="outline"
                 size="icon"
-                className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-background/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+                className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-background/70 backdrop-blur-sm transition-opacity"
               >
                 <Pencil className="h-5 w-5" />
                 <span className="sr-only">Edit profile picture</span>
