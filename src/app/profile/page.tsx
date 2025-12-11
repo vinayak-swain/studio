@@ -10,10 +10,10 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
+import { User as UserIcon } from 'lucide-react';
 
 function ProfilePageContent() {
   const { user } = useUser();
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar-4');
   const profileTabs = ['Overview', 'Repositories', 'Projects', 'Packages', 'Stars'];
 
   return (
@@ -23,8 +23,10 @@ function ProfilePageContent() {
         <aside className="col-span-1">
           <div className="flex flex-col items-center md:items-start">
             <Avatar className="h-48 w-48 md:h-64 md:w-64">
-              <AvatarImage src={userAvatar?.imageUrl} alt={user?.email || 'User'} />
-              <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+              <AvatarImage src={user?.photoURL || ''} alt={user?.email || 'User'} />
+              <AvatarFallback>
+                <UserIcon className="h-24 w-24 text-muted-foreground" />
+              </AvatarFallback>
             </Avatar>
             <div className="mt-4 text-center md:text-left">
               <h1 className="text-2xl font-bold">{user?.displayName || user?.email?.split('@')[0]}</h1>

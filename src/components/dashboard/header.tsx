@@ -326,11 +326,11 @@ export function DashboardHeader() {
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer">
                   <AvatarImage
-                    src={userAvatar?.imageUrl}
+                    src={user?.photoURL || ''}
                     alt={user?.email || 'User'}
                   />
                   <AvatarFallback>
-                    {user?.email?.[0].toUpperCase()}
+                    <UserIcon className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
