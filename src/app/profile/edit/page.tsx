@@ -114,31 +114,32 @@ function EditProfilePageContent() {
 
   async function onSubmit(data: ProfileFormValues) {
     if (!auth?.currentUser) return;
-
+  
     try {
-      let finalPhotoURL = auth.currentUser.photoURL;
-
+      let photoURL: string | null = auth.currentUser.photoURL;
+  
+      // Scenario 1: A new file is staged for upload.
       if (avatarFile) {
-        // Case 1: A new file was selected for upload
         const { firebaseApp } = initializeFirebase();
         const storage = getStorage(firebaseApp);
         const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
         await uploadBytes(storageRef, avatarFile);
-        finalPhotoURL = await getDownloadURL(storageRef);
-      } else if (avatarPreview === null) {
-        // Case 2: The user explicitly removed the photo
-        finalPhotoURL = null;
+        photoURL = await getDownloadURL(storageRef);
+      } 
+      // Scenario 2: The user explicitly removed the photo.
+      else if (avatarPreview === null) {
+        photoURL = null;
       }
-      // Case 3: No change to the photo, finalPhotoURL remains the original URL
-
+      // Scenario 3: The photo was not changed, photoURL remains the existing one.
+  
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: finalPhotoURL,
+        photoURL: photoURL,
       });
-
+  
       // In a real app, you would also update the bio in Firestore.
       // e.g., await updateDoc(doc(firestore, 'users', user.uid), { bio: data.bio });
-
+  
       toast({
         title: 'Profile updated',
         description: 'Your profile has been successfully updated.',
