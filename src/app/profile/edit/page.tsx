@@ -21,22 +21,75 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
 import { MoreVertical, Pencil } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { updateProfile } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+
+const profileFormSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
+  bio: z.string().optional(),
+  pronouns: z.string().optional(),
+  company: z.string().optional(),
+  location: z.string().optional(),
+  website: z.string().url().or(z.literal('')).optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function EditProfilePageContent() {
   const { user } = useUser();
+  const auth = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const [avatarFile, setAvatarFile] = React.useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = React.useState<string | null>(
     user?.photoURL || null
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: user?.displayName || '',
+      bio: 'Building the future of code collaboration.',
+      pronouns: '',
+      company: '',
+      location: '',
+      website: '',
+    },
+  });
+
+  React.useEffect(() => {
+    if (user) {
+      form.reset({
+        name: user.displayName || '',
+        bio: 'Building the future of code collaboration.',
+      });
+      setAvatarPreview(user.photoURL || null);
+    }
+  }, [user, form]);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
@@ -46,11 +99,39 @@ function EditProfilePageContent() {
   };
   
   const handleRemovePhoto = () => {
+    setAvatarFile(null);
     setAvatarPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  async function onSubmit(data: ProfileFormValues) {
+    if (!user || !auth) return;
+
+    try {
+      await updateProfile(auth.currentUser!, {
+        displayName: data.name,
+        // photoURL would be updated here after uploading avatarFile to storage
+      });
+
+      // In a real app, you would also update the bio in Firestore.
+      // e.g., await updateDoc(doc(firestore, 'users', user.uid), { bio: data.bio });
+
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been successfully updated.',
+      });
+      router.push('/profile');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.',
+      });
+    }
+  }
 
 
   return (
@@ -73,7 +154,7 @@ function EditProfilePageContent() {
                   alt={user?.email || 'User'}
                 />
                 <AvatarFallback>
-                  {user?.email?.[0].toUpperCase()}
+                  {user?.displayName?.[0].toUpperCase() || user?.email?.[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <DropdownMenu>
@@ -104,23 +185,40 @@ function EditProfilePageContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <form className="mt-4 w-full space-y-6">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue={user?.displayName || ''} />
-              </div>
-              <div>
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Tell us a little about yourself"
-                  defaultValue="Building the future of code collaboration."
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  You can @mention other users and organizations to link to
-                  them.
-                </p>
-              </div>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 w-full space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                <FormItem>
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Tell us a little about yourself"
+                    {...field}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    You can @mention other users and organizations to link to
+                    them.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+                )}
+              />
               <div>
                 <Label htmlFor="pronouns">Pronouns</Label>
                 <Select>
@@ -166,7 +264,7 @@ function EditProfilePageContent() {
               </div>
 
               <div className="flex gap-2">
-                <Button className="bg-green-600 text-white hover:bg-green-700">
+                <Button type="submit" className="bg-green-600 text-white hover:bg-green-700">
                   Save
                 </Button>
                 <Button variant="outline" asChild>
@@ -174,6 +272,7 @@ function EditProfilePageContent() {
                 </Button>
               </div>
             </form>
+            </Form>
           </div>
         </aside>
 
