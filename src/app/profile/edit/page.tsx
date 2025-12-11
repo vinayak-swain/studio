@@ -116,21 +116,24 @@ function EditProfilePageContent() {
     if (!auth?.currentUser) return;
 
     try {
-      let photoURL = auth.currentUser.photoURL;
+      let finalPhotoURL = auth.currentUser.photoURL;
 
       if (avatarFile) {
+        // Case 1: A new file was selected for upload
         const { firebaseApp } = initializeFirebase();
         const storage = getStorage(firebaseApp);
         const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
         await uploadBytes(storageRef, avatarFile);
-        photoURL = await getDownloadURL(storageRef);
+        finalPhotoURL = await getDownloadURL(storageRef);
       } else if (avatarPreview === null) {
-        photoURL = null;
+        // Case 2: The user explicitly removed the photo
+        finalPhotoURL = null;
       }
+      // Case 3: No change to the photo, finalPhotoURL remains the original URL
 
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: photoURL,
+        photoURL: finalPhotoURL,
       });
 
       // In a real app, you would also update the bio in Firestore.
