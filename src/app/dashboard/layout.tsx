@@ -1,6 +1,7 @@
 'use client';
 
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { InteractiveBackground } from '@/components/interactive-background';
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,10 @@ export default function DashboardLayout({
 }) {
   return (
     <FirebaseClientProvider>
-      <div className="min-h-screen bg-background text-foreground">{children}</div>
+      <div className="relative min-h-screen bg-background text-foreground">
+        <InteractiveBackground />
+        <div className="relative z-10">{children}</div>
+      </div>
     </FirebaseClientProvider>
   );
 }
