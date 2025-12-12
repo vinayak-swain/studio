@@ -23,9 +23,6 @@ import {
   Star,
   Settings,
   LogOut,
-  HelpCircle,
-  FlaskConical,
-  BookCopy,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -65,7 +62,7 @@ import {
 
 const primaryNav = [
   { name: 'Home', icon: Home, href: '/dashboard', current: true },
-  { name: 'Issues', icon: BookCopy, href: '/issues', current: false },
+  { name: 'Issues', icon: Book, href: '/issues', current: false },
   {
     name: 'Pull requests',
     icon: GitPullRequest,
@@ -313,7 +310,7 @@ export function DashboardHeader() {
                   className="h-8 w-8 rounded-full"
                 >
                   <Link href="/issues">
-                    <BookCopy className="h-4 w-4" />
+                    <Book className="h-4 w-4" />
                     <span className="sr-only">Issues</span>
                   </Link>
                 </Button>
@@ -361,9 +358,11 @@ export function DashboardHeader() {
                   <span>Your stars</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>
