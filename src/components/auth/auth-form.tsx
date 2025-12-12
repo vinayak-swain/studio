@@ -21,8 +21,10 @@ import {
 import { useRouter } from 'next/navigation';
 import { Logo } from '../icons/logo';
 import Link from 'next/link';
+import { updateProfile } from 'firebase/auth';
 
 const formSchema = z.object({
+  name: z.string().optional(),
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z
     .string()
@@ -38,16 +40,23 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema.refine(
+      (data) => !isSignUp || (data.name && data.name.length > 0), {
+        message: 'Name is required.',
+        path: ['name'],
+      }
+    )),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!auth) return;
     if (isSignUp) {
-      initiateEmailSignUp(auth, values.email, values.password);
+      await initiateEmailSignUp(auth, values.email, values.password, values.name || '');
     } else {
       initiateEmailSignIn(auth, values.email, values.password);
     }
@@ -68,6 +77,21 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
         </h2>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {isSignUp && (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="email"
