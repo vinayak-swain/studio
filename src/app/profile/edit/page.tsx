@@ -116,7 +116,7 @@ function EditProfilePageContent() {
     if (!auth?.currentUser) return;
   
     try {
-      let photoURL: string | null = auth.currentUser.photoURL;
+      let finalPhotoURL: string | null = auth.currentUser.photoURL;
   
       // Scenario 1: A new file is staged for upload.
       if (avatarFile) {
@@ -124,27 +124,25 @@ function EditProfilePageContent() {
         const storage = getStorage(firebaseApp);
         const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
         await uploadBytes(storageRef, avatarFile);
-        photoURL = await getDownloadURL(storageRef);
+        finalPhotoURL = await getDownloadURL(storageRef);
       } 
-      // Scenario 2: The user explicitly removed the photo.
+      // Scenario 2: The user explicitly removed the photo (and no new file was selected).
       else if (avatarPreview === null) {
-        photoURL = null;
+        finalPhotoURL = null;
       }
-      // Scenario 3: The photo was not changed, photoURL remains the existing one.
+      // Scenario 3: The photo was not changed, finalPhotoURL remains the existing one.
   
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: photoURL,
+        photoURL: finalPhotoURL,
       });
-  
-      // In a real app, you would also update the bio in Firestore.
-      // e.g., await updateDoc(doc(firestore, 'users', user.uid), { bio: data.bio });
   
       toast({
         title: 'Profile updated',
         description: 'Your profile has been successfully updated.',
       });
       router.push('/profile');
+      router.refresh(); // Force a refresh to ensure header shows new avatar
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
