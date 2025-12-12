@@ -5,6 +5,7 @@ import { DashboardHeader } from '../dashboard/header';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { InteractiveBackground } from '../interactive-background';
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -25,9 +26,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <DashboardHeader />
-      {children}
+    <div className="relative min-h-screen bg-background text-foreground">
+      <InteractiveBackground />
+      <div className="relative z-10">
+        <DashboardHeader />
+        {children}
+      </div>
     </div>
   );
 }

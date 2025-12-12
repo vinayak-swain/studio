@@ -38,7 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main>{children}</main>
+          <main className="relative z-10">{children}</main>
           <ThemeToggle />
           <Toaster />
         </ThemeProvider>
