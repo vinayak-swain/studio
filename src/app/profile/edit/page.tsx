@@ -55,8 +55,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function EditProfilePageContent() {
   const { user } = useUser();
-  const auth = useAuth();
-  const { firebaseApp } = useFirebase();
+  const { auth, firebaseApp } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -116,24 +115,20 @@ function EditProfilePageContent() {
     if (!auth?.currentUser || !firebaseApp) return;
   
     try {
-      let finalPhotoURL: string | null | undefined = auth.currentUser.photoURL;
+      let photoURL = auth.currentUser.photoURL; 
   
-      // Scenario 1: A new file is staged for upload.
       if (avatarFile) {
         const storage = getStorage(firebaseApp);
         const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
         await uploadBytes(storageRef, avatarFile);
-        finalPhotoURL = await getDownloadURL(storageRef);
-      } 
-      // Scenario 2: The user explicitly removed the photo.
-      else if (avatarPreview === null && auth.currentUser.photoURL !== null) {
-        finalPhotoURL = null;
+        photoURL = await getDownloadURL(storageRef);
+      } else if (avatarPreview === null) {
+        photoURL = null;
       }
-      // Scenario 3: The photo was not changed. `finalPhotoURL` remains the existing URL.
   
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: finalPhotoURL === undefined ? auth.currentUser.photoURL : finalPhotoURL,
+        photoURL: photoURL,
       });
   
       toast({
@@ -141,7 +136,7 @@ function EditProfilePageContent() {
         description: 'Your profile has been successfully updated.',
       });
       router.push('/profile');
-      router.refresh(); // Force a refresh to ensure header shows new avatar
+      router.refresh(); 
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -379,5 +374,3 @@ function EditProfilePageContent() {
 export default function EditProfilePage() {
   return <EditProfilePageContent />;
 }
-
-    
