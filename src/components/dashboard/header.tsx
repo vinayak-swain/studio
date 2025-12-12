@@ -360,10 +360,6 @@ export function DashboardHeader() {
                   <Star className="mr-2 h-4 w-4" />
                   <span>Your stars</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Box className="mr-2 h-4 w-4" />
-                  <span>Your projects</span>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
