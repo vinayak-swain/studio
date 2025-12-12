@@ -47,6 +47,7 @@ export default function EditProfilePage() {
   const [avatarPreview, setAvatarPreview] = React.useState<string | null>(
     user?.photoURL || null
   );
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormValues>({
@@ -92,11 +93,12 @@ export default function EditProfilePage() {
   async function onSubmit(data: ProfileFormValues) {
     if (!auth?.currentUser || !firebaseApp) return;
 
+    setIsSubmitting(true);
+
     try {
-      let photoURLToUpdate = auth.currentUser.photoURL;
+      let photoURLToUpdate: string | null = auth.currentUser.photoURL;
 
       if (avatarFile) {
-        // Scenario 1: New file is selected for upload
         const storage = getStorage(firebaseApp);
         const storageRef = ref(
           storage,
@@ -104,11 +106,9 @@ export default function EditProfilePage() {
         );
         await uploadBytes(storageRef, avatarFile);
         photoURLToUpdate = await getDownloadURL(storageRef);
-      } else if (avatarPreview === null && auth.currentUser.photoURL !== null) {
-        // Scenario 2: Photo was removed by the user
+      } else if (avatarPreview === null) {
         photoURLToUpdate = null;
       }
-      // Scenario 3 (no change) is covered by the initial value of photoURLToUpdate
 
       await updateProfile(auth.currentUser, {
         displayName: data.name,
@@ -129,6 +129,8 @@ export default function EditProfilePage() {
         description:
           error instanceof Error ? error.message : 'Could not update profile.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -243,7 +245,9 @@ export default function EditProfilePage() {
             )}
           />
 
-          <Button type="submit">Update profile</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Update profile'}
+          </Button>
         </form>
       </Form>
     </div>
