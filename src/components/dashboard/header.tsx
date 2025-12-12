@@ -366,13 +366,6 @@ export function DashboardHeader() {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <FlaskConical className="mr-2 h-4 w-4" />
-                  <span>Feature preview</span>
-                  <Badge variant="outline" className="ml-auto">
-                    New
-                  </Badge>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   <span>Help</span>
                 </DropdownMenuItem>
