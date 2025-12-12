@@ -5,16 +5,32 @@ import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser } from '@/firebase';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
 import { User as UserIcon } from 'lucide-react';
+import { doc } from 'firebase/firestore';
+
+interface UserProfile {
+    displayName: string;
+    email: string;
+    bio: string;
+    company: string;
+    photoURL: string;
+}
 
 function ProfilePageContent() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const profileTabs = ['Overview', 'Repositories', 'Projects', 'Packages', 'Stars'];
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
+  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -31,7 +47,7 @@ function ProfilePageContent() {
             <div className="mt-4 text-center md:text-left">
               <h1 className="text-2xl font-bold">{user?.displayName || user?.email?.split('@')[0]}</h1>
               <p className="text-lg text-muted-foreground">{user?.email}</p>
-              <p className="mt-2 text-sm">Building the future of code collaboration.</p>
+              <p className="mt-2 text-sm">{isLoading ? 'Loading bio...' : userProfile?.bio || 'Building the future of code collaboration.'}</p>
               <Button variant="outline" className="mt-4 w-full" asChild>
                 <Link href="/settings">Edit profile</Link>
               </Button>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,6 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const profileFormSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
@@ -39,7 +41,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function EditProfilePage() {
   const { user } = useUser();
-  const { auth, firebaseApp } = useFirebase();
+  const { auth, firestore, firebaseApp } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -54,7 +56,7 @@ export default function EditProfilePage() {
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: user?.displayName || '',
-      bio: 'Building the future of code collaboration.',
+      bio: '',
       company: '',
     },
   });
@@ -63,8 +65,8 @@ export default function EditProfilePage() {
     if (user) {
       form.reset({
         name: user.displayName || '',
-        bio: 'Building the future of code collaboration.',
-        company: '',
+        bio: '', // Will be loaded from Firestore
+        company: '', // Will be loaded from Firestore
       });
       setAvatarPreview(user.photoURL || null);
     }
@@ -91,12 +93,12 @@ export default function EditProfilePage() {
   };
 
   async function onSubmit(data: ProfileFormValues) {
-    if (!auth?.currentUser || !firebaseApp) return;
+    if (!auth?.currentUser || !firebaseApp || !firestore) return;
 
     setIsSubmitting(true);
 
     try {
-      let photoURLToUpdate: string | null = auth.currentUser.photoURL;
+      let photoURLToUpdate = auth.currentUser.photoURL;
 
       if (avatarFile) {
         const storage = getStorage(firebaseApp);
@@ -110,10 +112,23 @@ export default function EditProfilePage() {
         photoURLToUpdate = null;
       }
 
+      // Update Firebase Auth profile
       await updateProfile(auth.currentUser, {
         displayName: data.name,
         photoURL: photoURLToUpdate,
       });
+
+      // Update Firestore document
+      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+      await setDoc(userDocRef, {
+        id: auth.currentUser.uid,
+        displayName: data.name,
+        email: auth.currentUser.email,
+        bio: data.bio,
+        company: data.company,
+        photoURL: photoURLToUpdate,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
 
       toast({
         title: 'Profile updated',

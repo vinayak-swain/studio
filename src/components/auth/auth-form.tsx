@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +22,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { Logo } from '../icons/logo';
 import Link from 'next/link';
-import { updateProfile } from 'firebase/auth';
 
 const formSchema = z.object({
   name: z.string().optional(),

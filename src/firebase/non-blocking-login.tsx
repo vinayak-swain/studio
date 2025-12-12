@@ -1,35 +1,52 @@
+
 'use client';
 import {
-  Auth, // Import Auth type for type hinting
+  Auth,
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  // Assume getAuth and app are initialized elsewhere
+  UserCredential,
 } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp, getFirestore } from 'firebase/firestore';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
-/** Initiate email/password sign-up (non-blocking). */
+/** Initiate email/password sign-up and create a user document in Firestore. */
 export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, displayName: string): Promise<void> {
   try {
-    const userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
-    if (userCredential.user) {
-      await updateProfile(userCredential.user, { displayName });
+    const userCredential: UserCredential = await createUserWithEmailAndPassword(authInstance, email, password);
+    const user = userCredential.user;
+
+    if (user) {
+      // 1. Update the user's auth profile
+      await updateProfile(user, { displayName });
+
+      // 2. Create a document in Firestore for the user
+      const firestore = getFirestore(authInstance.app);
+      const userDocRef = doc(firestore, 'users', user.uid);
+      
+      await setDoc(userDocRef, {
+        id: user.uid,
+        displayName: displayName,
+        email: user.email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        photoURL: null,
+        bio: '',
+        company: ''
+      });
     }
   } catch (error) {
     console.error("Error during sign up:", error);
+    // Optionally, re-throw or handle the error in the UI
   }
 }
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
   signInWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }

@@ -1,23 +1,36 @@
+
 {
   "entities": {
     "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user account for the Nebula Dashboard application.",
+      "description": "Represents a user account for the CodeHub application.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the User entity."
+          "description": "Unique identifier for the User entity. Should match the Firebase Auth UID."
         },
-        "username": {
+        "displayName": {
           "type": "string",
-          "description": "The username of the user."
+          "description": "The display name of the user."
         },
         "email": {
           "type": "string",
           "description": "The email address of the user.",
           "format": "email"
+        },
+        "bio": {
+            "type": "string",
+            "description": "A short biography of the user."
+        },
+        "company": {
+            "type": "string",
+            "description": "The company the user works for."
+        },
+        "photoURL": {
+            "type": "string",
+            "description": "URL of the user's profile picture."
         },
         "createdAt": {
           "type": "string",
@@ -32,10 +45,9 @@
       },
       "required": [
         "id",
-        "username",
+        "displayName",
         "email",
-        "createdAt",
-        "updatedAt"
+        "createdAt"
       ]
     },
     "Repository": {
@@ -53,7 +65,7 @@
         },
         "ownerId": {
           "type": "string",
-          "description": "The ID of the user who owns the repository."
+          "description": "The ID of the user who owns the repository. Should match the Firebase Auth UID."
         },
         "createdAt": {
           "type": "string",
@@ -71,44 +83,13 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile information. Path-based ownership is enforced via the `userId` parameter. Allows only the authenticated user (with matching `uid`) to read or write their profile. Includes username, email, and timestamps for creation and updates.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user. This is used to enforce path-based ownership."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/repositories/{repoId}",
-        "definition": {
-          "entityName": "Repository",
-          "schema": {
-            "$ref": "#/backend/entities/Repository"
-          },
-          "description": "Stores user-owned repositories. Path-based ownership is enforced via the `userId` parameter.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "repoId",
-              "description": "The unique identifier of the repository."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "This Firestore data structure is designed to support the 'Nebula Dashboard' application, focusing on user authentication, dashboard content, and repository management. The structure adheres to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Since the prompt did not contain complex ownership requirements, I will use the simplest possible structure, focusing on a dedicated `/users/{userId}` collection and path-based ownership for the user profiles.\n\n**Authorization Independence:** User profile data is stored directly under `/users/{userId}`, eliminating the need for `get()` calls to parent documents to verify ownership. This also applies to any potential future subcollections under `/users/{userId}`. Any denormalization will need to be applied to any new subcollections to maintain authorization independence.\n\n**QAPs Support:** The structure supports secure `list` operations for user profiles, as rules can easily check if `request.auth.uid == userId` for any read or write operations on `/users/{userId}`. It also paves the way for future content that is owned by the user to be easily secured using path-based ownership within subcollections of `/users/{userId}`.\n\n**Scalability & Debuggability:** Path-based ownership simplifies security rules and reduces the need for complex queries. The naming conventions (e.g., `users/{userId}`) are consistent and self-documenting."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores public and private user profile information, including name, bio, and company. The document ID must match the user's Firebase Auth UID, enforcing ownership."
+    },
+    "/users/{userId}/repositories/{repoId}": {
+      "schema": { "$ref": "#/entities/Repository" },
+      "description": "Stores repositories created by a specific user. Path-based ownership ensures a user can only access their own repositories."
+    }
   }
 }
