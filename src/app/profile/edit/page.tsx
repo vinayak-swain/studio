@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirebase } from '@/firebase';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';
@@ -41,7 +41,6 @@ import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { initializeFirebase } from '@/firebase';
 
 const profileFormSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
@@ -57,6 +56,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 function EditProfilePageContent() {
   const { user } = useUser();
   const auth = useAuth();
+  const { firebaseApp } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -113,28 +113,27 @@ function EditProfilePageContent() {
   };
 
   async function onSubmit(data: ProfileFormValues) {
-    if (!auth?.currentUser) return;
+    if (!auth?.currentUser || !firebaseApp) return;
   
     try {
-      let finalPhotoURL: string | null = auth.currentUser.photoURL;
+      let finalPhotoURL: string | null | undefined = auth.currentUser.photoURL;
   
       // Scenario 1: A new file is staged for upload.
       if (avatarFile) {
-        const { firebaseApp } = initializeFirebase();
         const storage = getStorage(firebaseApp);
         const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
         await uploadBytes(storageRef, avatarFile);
         finalPhotoURL = await getDownloadURL(storageRef);
       } 
-      // Scenario 2: The user explicitly removed the photo (and no new file was selected).
-      else if (avatarPreview === null) {
+      // Scenario 2: The user explicitly removed the photo.
+      else if (avatarPreview === null && auth.currentUser.photoURL !== null) {
         finalPhotoURL = null;
       }
-      // Scenario 3: The photo was not changed, finalPhotoURL remains the existing one.
+      // Scenario 3: The photo was not changed. `finalPhotoURL` remains the existing URL.
   
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: finalPhotoURL,
+        photoURL: finalPhotoURL === undefined ? auth.currentUser.photoURL : finalPhotoURL,
       });
   
       toast({
@@ -380,3 +379,5 @@ function EditProfilePageContent() {
 export default function EditProfilePage() {
   return <EditProfilePageContent />;
 }
+
+    
