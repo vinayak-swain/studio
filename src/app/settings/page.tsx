@@ -3,25 +3,10 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
 import { useFirebase, useUser } from '@/firebase';
-import { MoreVertical, Pencil, User as UserIcon } from 'lucide-react';
+import { Pencil, User as UserIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,14 +22,17 @@ import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const profileFormSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   bio: z.string().optional(),
-  pronouns: z.string().optional(),
   company: z.string().optional(),
-  location: z.string().optional(),
-  website: z.string().url().or(z.literal('')).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -66,10 +54,7 @@ export default function EditProfilePage() {
     defaultValues: {
       name: user?.displayName || '',
       bio: 'Building the future of code collaboration.',
-      pronouns: '',
       company: '',
-      location: '',
-      website: '',
     },
   });
 
@@ -78,10 +63,7 @@ export default function EditProfilePage() {
       form.reset({
         name: user.displayName || '',
         bio: 'Building the future of code collaboration.',
-        pronouns: '',
         company: '',
-        location: '',
-        website: '',
       });
       setAvatarPreview(user.photoURL || null);
     }
@@ -111,23 +93,26 @@ export default function EditProfilePage() {
     if (!auth?.currentUser || !firebaseApp) return;
 
     try {
-      let finalPhotoURL = auth.currentUser.photoURL;
+      let photoURLToUpdate = auth.currentUser.photoURL;
 
       if (avatarFile) {
-        // New file selected for upload
+        // Scenario 1: New file is selected for upload
         const storage = getStorage(firebaseApp);
-        const storageRef = ref(storage, `profile-pictures/${auth.currentUser.uid}`);
+        const storageRef = ref(
+          storage,
+          `profile-pictures/${auth.currentUser.uid}`
+        );
         await uploadBytes(storageRef, avatarFile);
-        finalPhotoURL = await getDownloadURL(storageRef);
-      } else if (avatarPreview === null) {
-        // User removed the photo
-        finalPhotoURL = null;
+        photoURLToUpdate = await getDownloadURL(storageRef);
+      } else if (avatarPreview === null && auth.currentUser.photoURL !== null) {
+        // Scenario 2: Photo was removed by the user
+        photoURLToUpdate = null;
       }
-      // If no new file and preview exists, finalPhotoURL retains its initial value
+      // Scenario 3 (no change) is covered by the initial value of photoURLToUpdate
 
       await updateProfile(auth.currentUser, {
         displayName: data.name,
-        photoURL: finalPhotoURL,
+        photoURL: photoURLToUpdate,
       });
 
       toast({
@@ -141,14 +126,15 @@ export default function EditProfilePage() {
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: 'There was a problem with your request.',
+        description:
+          error instanceof Error ? error.message : 'Could not update profile.',
       });
     }
   }
 
   return (
     <div className="space-y-6">
-       <input
+      <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
@@ -180,17 +166,22 @@ export default function EditProfilePage() {
                     variant="outline"
                     size="icon"
                     className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full bg-background/70 backdrop-blur-sm"
+                    type="button"
                   >
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Edit profile picture</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleUploadClick}>
+                  <DropdownMenuItem
+                    onClick={handleUploadClick}
+                    onSelect={(e) => e.preventDefault()}
+                  >
                     Upload a photo
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleRemovePhoto}
+                    onSelect={(e) => e.preventDefault()}
                     className="text-destructive focus:text-destructive"
                   >
                     Remove photo
@@ -229,10 +220,10 @@ export default function EditProfilePage() {
                     className="max-w-lg"
                   />
                 </FormControl>
-                 <p className="mt-1 text-xs text-muted-foreground">
-                    You can @mention other users and organizations to link to
-                    them.
-                  </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  You can @mention other users and organizations to link to
+                  them.
+                </p>
                 <FormMessage />
               </FormItem>
             )}
@@ -251,7 +242,7 @@ export default function EditProfilePage() {
               </FormItem>
             )}
           />
-          
+
           <Button type="submit">Update profile</Button>
         </form>
       </Form>
