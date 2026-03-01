@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +21,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Logo } from '../icons/logo';
 import Link from 'next/link';
+import { useState } from 'react';
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -38,6 +38,7 @@ type AuthFormProps = {
 export function AuthForm({ isSignUp }: AuthFormProps) {
   const auth = useAuth();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema.refine(
@@ -55,12 +56,19 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!auth) return;
-    if (isSignUp) {
-      await initiateEmailSignUp(auth, values.email, values.password, values.name || '');
-    } else {
-      initiateEmailSignIn(auth, values.email, values.password);
+    setIsLoading(true);
+    try {
+      if (isSignUp) {
+        await initiateEmailSignUp(auth, values.email, values.password, values.name || '');
+      } else {
+        await initiateEmailSignIn(auth, values.email, values.password);
+      }
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Authentication error:', error);
+    } finally {
+      setIsLoading(false);
     }
-    router.push('/dashboard');
   }
 
   return (
@@ -68,8 +76,8 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
       <div className="w-full max-w-md rounded-lg border bg-card p-8 shadow-lg">
         <div className="mb-8 flex justify-center">
           <Link href="/" className="flex items-center gap-3 text-2xl font-semibold">
-            <Logo className="h-8 w-8" />
-            <span>CodeHub</span>
+            <Logo className="h-8 w-8 text-primary" />
+            <span>DevNest</span>
           </Link>
         </div>
         <h2 className="mb-6 text-center text-2xl font-bold">
@@ -118,8 +126,8 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              {isSignUp ? 'Sign Up' : 'Sign In'}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </Button>
           </form>
         </Form>

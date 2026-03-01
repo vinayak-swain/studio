@@ -1,11 +1,10 @@
-
 {
   "entities": {
     "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user account for the CodeHub application.",
+      "description": "Represents a user account for the DevNest application.",
       "properties": {
         "id": {
           "type": "string",
@@ -53,7 +52,7 @@
     "Repository": {
       "title": "Repository",
       "type": "object",
-      "description": "Represents a code repository within the CodeHub application.",
+      "description": "Represents a code repository within the DevNest application.",
       "properties": {
         "name": {
           "type": "string",

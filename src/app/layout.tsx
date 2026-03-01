@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'CodeHub',
-  description: 'The Everything App for your teams.',
+  title: 'DevNest',
+  description: 'A cozy space for developers to collaborate and build something amazing.',
 };
 
 export default function RootLayout({

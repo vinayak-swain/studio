@@ -13,23 +13,22 @@ export default function HeroPage() {
 
         <header className="fixed top-0 z-20 flex h-20 w-full items-center justify-start px-6 md:px-12 lg:px-20">
           <Link
-            href="#"
+            href="/"
             className="flex items-center gap-2 text-lg font-semibold text-foreground"
           >
-            <span className="font-bold">CodeHub</span>
+            <span className="font-bold">DevNest</span>
           </Link>
         </header>
 
         <div className="relative z-10 flex flex-col items-center text-center max-w-4xl px-6">
           <div className="mb-4 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-600">
-            Introducing CodeHub
+            Introducing DevNest
           </div>
           <h1 className="text-5xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-6xl md:text-7xl">
             Where Code Becomes Collaboration
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-gray-600 md:text-xl">
-            From idea to production—manage repositories, collaborate with teams,
-            and deploy with confidence.
+            A cozy space for developers to collaborate and build something amazing.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
             <Button

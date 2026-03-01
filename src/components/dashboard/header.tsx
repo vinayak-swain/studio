@@ -29,7 +29,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Logo } from '../icons/logo';
 import { useAuth, useUser } from '@/firebase';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +51,6 @@ import { Separator } from '../ui/separator';
 import { repositories } from '@/lib/data';
 import { signOut as firebaseSignOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { Badge } from '../ui/badge';
 import {
   Tooltip,
   TooltipContent,
@@ -90,9 +88,6 @@ export function DashboardHeader() {
   const { user } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const userAvatar = PlaceHolderImages.find(
-    (img) => img.id === 'user-avatar-4'
-  );
   const [open, setOpen] = React.useState(false);
 
   const signOut = () => {
@@ -119,9 +114,9 @@ export function DashboardHeader() {
             <div className="flex h-full flex-col">
               <SheetHeader className="flex flex-row items-center justify-between border-b border-border p-4">
                 <div className="flex items-center gap-3">
-                  <Github className="h-8 w-8 rounded-full" />
+                  <Logo className="h-8 w-8 text-primary" />
                   <SheetTitle>
-                    <span className="text-sm font-semibold">Dashboard</span>
+                    <span className="text-sm font-semibold">DevNest</span>
                   </SheetTitle>
                   <SheetDescription className="sr-only">
                     A sidebar with the main navigation links for the dashboard.
@@ -220,6 +215,7 @@ export function DashboardHeader() {
           className="flex items-center gap-2 font-semibold"
         >
           <Logo className="h-6 w-6" />
+          <span className="hidden md:inline-block">DevNest</span>
         </Link>
       </div>
 

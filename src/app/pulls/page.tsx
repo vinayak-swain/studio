@@ -129,7 +129,7 @@ function PullsPageFooter() {
         <Link href="#" className="hover:text-blue-500 hover:underline">
           Docs
         </Link>
-        <span>© 2024 CodeHub, Inc.</span>
+        <span>© 2025 DevNest, Inc.</span>
         <Link href="#" className="hover:text-blue-500 hover:underline">
           Contact
         </Link>
