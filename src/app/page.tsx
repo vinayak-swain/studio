@@ -24,11 +24,11 @@ export default function HeroPage() {
           <div className="mb-4 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-600">
             Introducing DevNest
           </div>
-          <h1 className="text-5xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-6xl md:text-7xl">
-            Where Code Becomes Collaboration
+          <h1 className="text-4xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+            A cozy space for developers to collaborate and build something amazing.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-gray-600 md:text-xl">
-            A cozy space for developers to collaborate and build something amazing.
+            Join the community where creativity meets code. Build, share, and grow together in your new digital home.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
             <Button
@@ -61,7 +61,7 @@ export default function HeroPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  Organize your code with ease.
+                  Organize your code with ease and maintain full control.
                 </p>
               </CardContent>
             </Card>
@@ -74,7 +74,7 @@ export default function HeroPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  Work together with your team seamlessly.
+                  Work together with your team seamlessly in a focused environment.
                 </p>
               </CardContent>
             </Card>
@@ -85,7 +85,7 @@ export default function HeroPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  Ship your projects with confidence.
+                  Ship your projects with confidence using integrated tools.
                 </p>
               </CardContent>
             </Card>
@@ -95,13 +95,13 @@ export default function HeroPage() {
       <section className="w-full py-20 lg:py-32 bg-muted">
         <div className="container mx-auto px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-            Ready to Get Started?
+            Ready to Build Something Amazing?
           </h2>
-          <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Sign up today and start collaborating on your next big idea.
+          <p className="mx-auto mt-4 max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            Sign up today and start collaborating in the coziest corner of the web.
           </p>
-          <div className="mt-6">
-            <Button size="lg" asChild>
+          <div className="mt-8">
+            <Button size="lg" className="rounded-full" asChild>
               <Link href="/signup">Sign Up Now</Link>
             </Button>
           </div>
