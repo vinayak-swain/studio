@@ -25,7 +25,7 @@ export default function HeroPage() {
             Introducing DevNest
           </div>
           <h1 className="text-4xl font-extrabold leading-tight tracking-tighter text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-            A cozy space for developers to collaborate and build something amazing.
+            A cozy space for developers to collaborate.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-gray-600 md:text-xl">
             Join the community where creativity meets code. Build, share, and grow together in your new digital home.

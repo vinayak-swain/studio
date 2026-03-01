@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'DevNest',
-  description: 'A cozy space for developers to collaborate and build something amazing.',
+  description: 'A cozy space for developers to collaborate.',
 };
 
 export default function RootLayout({
