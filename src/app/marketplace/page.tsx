@@ -34,10 +34,10 @@ function MarketplacePageContent() {
           <div className="flex w-full items-center justify-between">
             <div className="max-w-xl">
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                Build with the power of the universe
+                Build with the power of DevNest
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                The best tools from the developer community to help you build, ship, and secure your software.
+                The best tools from our developer community to help you build, ship, and secure your software.
               </p>
               <div className="mt-8">
                 <div className="relative">
@@ -127,5 +127,3 @@ export default function MarketplacePage() {
         </DashboardLayout>
     )
 }
-
-    

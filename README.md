@@ -1,3 +1,4 @@
+
 # DevNest
 
 A cozy space for developers to collaborate.
@@ -33,7 +34,7 @@ To run this project on your local machine, follow these steps:
    ```bash
    npm run dev
    ```
-   The app will be available at [http://localhost:9002](http://localhost:9002).
+   The app will be available at [http://localhost:3000](http://localhost:3000).
 
 2. **Start the Genkit UI (Optional)**:
    To test and debug AI flows, run:

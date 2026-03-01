@@ -1,3 +1,4 @@
+
 import { PlaceHolderImages } from './placeholder-images';
 import { Star, Bot, AppWindow, Zap } from 'lucide-react';
 
@@ -110,7 +111,7 @@ export const marketplaceItems = [
     {
         icon: Bot,
         title: 'Code Pilot',
-        author: 'Nebula',
+        author: 'DevNest',
         description: 'AI-powered code completion and suggestions to boost your productivity.',
         type: 'Model',
     },
@@ -168,4 +169,3 @@ export const contributionData = {
     { date: '2025-12-30', count: 0 }, { date: '2025-12-31', count: 0 },
   ],
 };
-    
