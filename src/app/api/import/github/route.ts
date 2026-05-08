@@ -5,13 +5,14 @@ import { importFromGitHub } from '@/lib/import/github';
 import { initializeFirebase } from '@/firebase';
 import { collection, addDoc, serverTimestamp, getFirestore } from 'firebase/firestore';
 import { analyzeImportedRepo } from '@/ai/flows/import-analysis';
+import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function POST(req: Request) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   const accessToken = (session as any)?.accessToken;
 
   if (!accessToken) {
-    return NextResponse.json({ error: 'GitHub session expired' }, { status: 401 });
+    return NextResponse.json({ error: 'GitHub session expired or not found' }, { status: 401 });
   }
 
   const { owner, repo, newName, isPrivate, userId } = await req.json();
@@ -25,7 +26,8 @@ export async function POST(req: Request) {
     const db = getFirestore(firebaseApp);
 
     // 3. AI Analysis on initial content
-    const sampleFiles = githubData.files.slice(0, 5).map(f => `File: ${f.path}\n${f.content.substring(0, 500)}`).join('\n---\n');
+    // Use snippets for analysis to keep prompt size reasonable
+    const sampleFiles = githubData.files.slice(0, 5).map(f => `File: ${f?.path}\n${f?.content?.substring(0, 500)}`).join('\n---\n');
     const aiAnalysis = await analyzeImportedRepo({
       repoName: newName || githubData.repo.name,
       fileCount: githubData.files.length,
@@ -44,9 +46,6 @@ export async function POST(req: Request) {
       createdAt: serverTimestamp(),
       importAnalysis: aiAnalysis
     });
-
-    // 5. Store Files (In a real app, these go to Storage or specialized collections)
-    // For prototype, we simulate successful storage of fileCount files.
 
     return NextResponse.json({ 
       success: true, 
