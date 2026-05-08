@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -73,6 +74,26 @@
         }
       },
       "required": ["name", "ownerId", "createdAt"]
+    },
+    "GraphNode": {
+      "title": "GraphNode",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["file", "function", "module", "issue", "doc"] },
+        "label": { "type": "string" },
+        "metadata": { "type": "object" },
+        "relations": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "targetId": { "type": "string" },
+              "type": { "type": "string", "description": "depends_on, calls, describes, relates_to" }
+            }
+          }
+        }
+      }
     }
   },
   "auth": {
@@ -83,12 +104,14 @@
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
-      "description": "Stores public and private user profile information, including name, bio, and company. The document ID must match the user's Firebase Auth UID, enforcing ownership."
+      "schema": { "$ref": "#/entities/User" }
     },
     "/users/{userId}/repositories/{repoId}": {
-      "schema": { "$ref": "#/entities/Repository" },
-      "description": "Stores repositories created by a specific user. Path-based ownership ensures a user can only access their own repositories."
+      "schema": { "$ref": "#/entities/Repository" }
+    },
+    "/knowledge_graph/{nodeId}": {
+      "schema": { "$ref": "#/entities/GraphNode" },
+      "description": "Stores nodes and relations for the project knowledge graph."
     }
   }
 }

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Knowledge Graph Chatbot flow for DevNest.
@@ -8,7 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getFirestore } from 'firebase-admin/firestore'; // Note: In a real environment, use server-side admin SDK or tools to fetch Firestore data
+import { scanCodebase } from '@/lib/graph-scanner';
 
 // Input/Output Schemas
 const GraphChatInputSchema = z.object({
@@ -25,65 +26,37 @@ const GraphChatOutputSchema = z.object({
 });
 
 // Tools for discovery
-const searchCodebaseMetadata = ai.defineTool(
+const getFullKnowledgeGraph = ai.defineTool(
   {
-    name: 'searchCodebaseMetadata',
-    description: 'Searches repository metadata for file paths, modules, and basic descriptions.',
-    inputSchema: z.object({ query: z.string() }),
-    outputSchema: z.array(z.object({ path: z.string(), description: z.string(), dependencies: z.array(z.string()) })),
+    name: 'getFullKnowledgeGraph',
+    description: 'Fetches the entire knowledge graph including files, imports, and relations.',
+    inputSchema: z.object({}),
+    outputSchema: z.any(),
   },
-  async (input) => {
-    // Simulated metadata search based on project structure
-    // In a real app, this would query a Firestore collection of "indexed_files"
-    const mockMetadata = [
-      { path: 'src/firebase/index.ts', description: 'Core Firebase initialization and SDK exports.', dependencies: ['firebase/app', 'firebase/auth', 'firebase/firestore'] },
-      { path: 'src/app/login/page.tsx', description: 'Login page for authentication.', dependencies: ['src/components/auth/auth-form.tsx'] },
-      { path: 'src/components/auth/auth-form.tsx', description: 'Form component for sign-in/up.', dependencies: ['src/firebase/non-blocking-login.tsx'] },
-      { path: 'src/ai/genkit.ts', description: 'Genkit AI initialization.', dependencies: ['genkit', '@genkit-ai/google-genai'] },
-      { path: 'src/app/dashboard/page.tsx', description: 'Main user dashboard.', dependencies: ['src/components/dashboard/header.tsx', 'src/firebase/index.ts'] },
-    ];
-    return mockMetadata.filter(m => m.path.includes(input.query) || m.description.toLowerCase().includes(input.query.toLowerCase()));
-  }
-);
-
-const fetchIssues = ai.defineTool(
-  {
-    name: 'fetchIssues',
-    description: 'Fetches list of issues related to a specific topic (e.g., payments, auth).',
-    inputSchema: z.object({ topic: z.string() }),
-    outputSchema: z.array(z.object({ id: z.string(), title: z.string(), status: z.string(), relatedFiles: z.array(z.string()) })),
-  },
-  async (input) => {
-    const mockIssues = [
-      { id: 'ISSUE-101', title: 'Fix login redirection loop', status: 'open', relatedFiles: ['src/app/login/page.tsx'] },
-      { id: 'ISSUE-102', title: 'Database connection timeout on production', status: 'closed', relatedFiles: ['src/firebase/index.ts'] },
-    ];
-    return mockIssues.filter(i => i.title.toLowerCase().includes(input.topic.toLowerCase()));
+  async () => {
+    return await scanCodebase();
   }
 );
 
 // Define Prompt
 const graphChatPrompt = ai.definePrompt({
   name: 'graphChatPrompt',
-  tools: [searchCodebaseMetadata, fetchIssues],
+  tools: [getFullKnowledgeGraph],
   input: { schema: GraphChatInputSchema },
   output: { schema: GraphChatOutputSchema },
-  prompt: `You are the DevNest Insight Bot, an expert at analyzing codebases and project metadata.
+  prompt: `You are the DevNest Insight Bot, an expert at analyzing codebases.
   
-  Your goal is to answer technical questions by exploring the knowledge graph of this project.
-  Use the provided tools to search for modules, files, dependencies, and issues.
+  Use the getFullKnowledgeGraph tool to understand the project structure.
   
   When asked about dependencies:
-  1. Use searchCodebaseMetadata to find the files.
-  2. Cross-reference their dependencies.
+  - Look for "depends_on" relations.
   
   When asked about issues:
-  1. Use fetchIssues to find related tasks.
+  - Look for "issue" type nodes and their "relates_to" relations.
+  
+  Answer clearly and provide a list of sources (file paths or IDs) you used to find the answer.
   
   Current User Query: {{{query}}}
-  
-  Context:
-  DevNest is built with Next.js, Firebase (Auth/Firestore), and Genkit.
   `,
 });
 
