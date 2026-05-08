@@ -42,13 +42,43 @@ To run this project on your local machine, follow these steps:
    npm run genkit:dev
    ```
 
+## Studio CLI (DVCS)
+
+DevNest comes with a powerful CLI tool for terminal-based version control with AI insights.
+
+### Local CLI Setup
+
+1. **Navigate to the CLI directory**:
+   ```bash
+   cd studio-cli
+   ```
+2. **Install and Build**:
+   ```bash
+   npm install
+   npm run build
+   ```
+3. **Link Globally**:
+   ```bash
+   npm link
+   ```
+   *Now the `studio` command is available everywhere on your machine.*
+
+### Common Commands
+
+- `studio login`: Authenticate with your DevNest account.
+- `studio init`: Initialize a new repository in the current folder.
+- `studio status`: See local sync status and tracked files.
+- `studio push`: Push all local files to the cloud with AI code analysis.
+- `studio pull`: Pull the latest state from the cloud.
+- `studio commit "message"`: Create a local commit with AI-generated risk scoring.
+
 ## Technical Architecture
 
 ### Data Storage & Persistence
 - **Database**: **Firebase Firestore** (NoSQL Cloud Database). All repository metadata, user profiles, and application settings are persisted here.
 - **Authentication**: **Firebase Auth**. Handles secure sign-up, login, and session management.
 - **Persistence**: Data is stored in the cloud. It survives server restarts and local environment changes.
-- **File Management**: Currently, repository metadata is tracked in Firestore. In a production environment, actual file blobs would be stored in Firebase Storage.
+- **CLI Sync**: The CLI uses token-based authentication to securely push/pull file buffers directly to Firestore.
 
 ## Tech Stack
 
@@ -57,3 +87,4 @@ To run this project on your local machine, follow these steps:
 - **Components**: ShadCN UI
 - **Database/Auth**: Firebase (Firestore & Auth)
 - **AI**: Genkit with Google Gemini
+- **CLI**: TypeScript, Commander, Chalk, Inquirer
