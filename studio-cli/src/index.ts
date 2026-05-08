@@ -1,7 +1,13 @@
 
 #!/usr/bin/env node
 import { Command } from 'commander';
-import chalk from 'chalk';
+import { login } from './commands/login.js';
+import { init } from './commands/init.js';
+import { status } from './commands/status.js';
+import { commit } from './commands/commit.js';
+import { push } from './commands/push.js';
+import { pull } from './commands/pull.js';
+import { clone } from './commands/clone.js';
 
 const program = new Command();
 
@@ -10,6 +16,41 @@ program
   .description('DevNest CLI - A cozy version control tool')
   .version('1.0.0');
 
-// Commands will be registered here in the next step
+program
+  .command('login')
+  .description('Login to DevNest')
+  .action(login);
+
+program
+  .command('init')
+  .description('Initialize a new repository')
+  .action(init);
+
+program
+  .command('status')
+  .description('Show local repository status')
+  .action(status);
+
+program
+  .command('commit')
+  .description('Commit local changes')
+  .argument('<message>', 'Commit message')
+  .action(commit);
+
+program
+  .command('push')
+  .description('Push changes to DevNest')
+  .action(push);
+
+program
+  .command('pull')
+  .description('Pull changes from DevNest')
+  .action(pull);
+
+program
+  .command('clone')
+  .description('Clone a repository')
+  .argument('<repo>', 'Repository path (owner/repo)')
+  .action(clone);
 
 program.parse();
