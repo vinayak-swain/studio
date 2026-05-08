@@ -23,6 +23,7 @@ import {
   Star,
   Settings,
   LogOut,
+  Network,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -59,7 +60,8 @@ import {
 } from '@/components/ui/tooltip';
 
 const primaryNav = [
-  { name: 'Home', icon: Home, href: '/dashboard', current: true },
+  { name: 'Home', icon: Home, href: '/dashboard', current: false },
+  { name: 'Insight Bot', icon: Network, href: '/graph-chat', current: true },
   { name: 'Issues', icon: Book, href: '/issues', current: false },
   {
     name: 'Pull requests',
