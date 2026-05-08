@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Network, Send, User, Bot, Loader2, Sparkles, FileText, AlertCircle, MessageCircle, Share2 } from 'lucide-react';
+import { Network, Send, User, Bot, Loader2, Sparkles, FileText, AlertCircle, MessageCircle, Share2, RefreshCw } from 'lucide-react';
 import { knowledgeGraphChat } from '@/ai/flows/knowledge-graph-chat';
 import { GraphVisualizer } from '@/components/graph/graph-visualizer';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   role: 'user' | 'model';
@@ -21,13 +22,36 @@ export default function GraphChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  const handleScan = async () => {
+    setIsScanning(true);
+    try {
+      const res = await fetch('/api/knowledge-graph/scan', { method: 'POST' });
+      if (res.ok) {
+        toast({
+          title: "Scan Complete",
+          description: "The knowledge graph has been updated with the latest codebase changes.",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Scan Failed",
+        description: "Could not update the knowledge graph.",
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleSend = async (overrideInput?: string) => {
     const queryText = overrideInput || input;
@@ -65,7 +89,7 @@ export default function GraphChatPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto max-w-6xl py-6 px-4 h-[calc(100vh-100px)] flex flex-col">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Network className="h-6 w-6 text-primary" />
@@ -76,10 +100,11 @@ export default function GraphChatPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setMessages([])}>
+            <Button variant="outline" size="sm" onClick={() => setMessages([])} className="rounded-full">
               Reset History
             </Button>
-            <Button variant="outline" size="sm" onClick={() => fetch('/api/knowledge-graph/scan', { method: 'POST' })}>
+            <Button variant="outline" size="sm" onClick={handleScan} disabled={isScanning} className="rounded-full">
+              {isScanning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               Refresh Graph
             </Button>
           </div>
@@ -91,7 +116,7 @@ export default function GraphChatPage() {
               <MessageCircle className="h-4 w-4" /> Chat Assistant
             </TabsTrigger>
             <TabsTrigger value="graph" className="flex items-center gap-2">
-              <Share2 className="h-4 w-4" /> Graph Visualizer
+              <Share2 className="h-4 w-4" /> Visual Graph
             </TabsTrigger>
           </TabsList>
 
@@ -110,16 +135,16 @@ export default function GraphChatPage() {
                       </p>
                       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl px-4">
                         {[
-                          'Which files depend on authentication?', 
+                          'Which modules depend on authentication?', 
                           'Where is the logging system used?', 
-                          'What issues are related to payments?', 
-                          'Which files use the database connection?'
+                          'What are the most connected modules?', 
+                          'What issues are related to payments?'
                         ].map((q) => (
                           <Button 
                             key={q} 
                             variant="outline" 
                             size="sm" 
-                            className="justify-start h-auto py-3 px-4 text-left text-xs bg-background/50 hover:bg-background border-dashed hover:border-primary/50 transition-all"
+                            className="justify-start h-auto py-3 px-4 text-left text-xs bg-background/50 hover:bg-background border-dashed hover:border-primary/50 transition-all rounded-xl"
                             onClick={() => handleSend(q)}
                           >
                             {q}

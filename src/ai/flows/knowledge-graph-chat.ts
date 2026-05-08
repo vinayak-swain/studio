@@ -25,7 +25,7 @@ const GraphChatInputSchema = z.object({
 export type GraphChatInput = z.infer<typeof GraphChatInputSchema>;
 
 const GraphChatOutputSchema = z.object({
-  answer: z.string().describe('The AI response based on the knowledge graph discovery.'),
+  answer: z.string().describe('The AI response based on the knowledge graph discovery. Be helpful and precise.'),
   sources: z.array(z.string()).describe('List of files or entities referenced in the answer.'),
 });
 export type GraphChatOutput = z.infer<typeof GraphChatOutputSchema>;
@@ -55,14 +55,15 @@ const graphChatPrompt = ai.definePrompt({
   Your goal is to answer technical questions about this project using the knowledge graph provided by the tools.
   
   ### Instructions:
-  1. Call the 'getFullKnowledgeGraph' tool to see the project structure.
+  1. ALWAYS call the 'getFullKnowledgeGraph' tool first to understand the current project structure.
   2. The graph contains nodes (files, issues, etc.) and relations (depends_on, relates_to).
   3. For "What depends on X?": Find all nodes that have a 'depends_on' relation targeting X.
   4. For "Where is X used?": Look for calls or imports pointing to X.
   5. For "What issues relate to X?": Look for 'issue' type nodes with 'relates_to' pointing to X.
-  6. If you find multiple related files, list them in the 'sources' field.
+  6. For "Most connected modules": Identify nodes with the highest number of relations.
+  7. If you find multiple related files, list them in the 'sources' field using their full path from the graph.
   
-  Be precise. If a module isn't in the graph, say you couldn't find it.
+  Be precise and technical. If a module isn't in the graph, state that clearly.
   
   User Query: {{{query}}}
   `,
