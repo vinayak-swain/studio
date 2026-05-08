@@ -42,6 +42,14 @@ To run this project on your local machine, follow these steps:
    npm run genkit:dev
    ```
 
+## Technical Architecture
+
+### Data Storage & Persistence
+- **Database**: **Firebase Firestore** (NoSQL Cloud Database). All repository metadata, user profiles, and application settings are persisted here.
+- **Authentication**: **Firebase Auth**. Handles secure sign-up, login, and session management.
+- **Persistence**: Data is stored in the cloud. It survives server restarts and local environment changes.
+- **File Management**: Currently, repository metadata is tracked in Firestore. In a production environment, actual file blobs would be stored in Firebase Storage.
+
 ## Tech Stack
 
 - **Framework**: Next.js (App Router)
@@ -49,5 +57,3 @@ To run this project on your local machine, follow these steps:
 - **Components**: ShadCN UI
 - **Database/Auth**: Firebase (Firestore & Auth)
 - **AI**: Genkit with Google Gemini
-
-........
