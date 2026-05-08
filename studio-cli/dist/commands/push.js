@@ -6,19 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.push = push;
 const chalk_1 = __importDefault(require("chalk"));
 const ora_1 = __importDefault(require("ora"));
-const api_js_1 = require("../lib/api.js");
-const config_js_1 = require("../lib/config.js");
-const files_js_1 = require("../lib/files.js");
+const api_1 = require("../lib/api");
+const config_1 = require("../lib/config");
+const files_1 = require("../lib/files");
 async function push() {
-    const config = await (0, config_js_1.getLocalConfig)();
+    const config = await (0, config_1.getLocalConfig)();
     if (!config) {
         console.log(chalk_1.default.red('Not a studio repository.'));
         return;
     }
-    const files = await (0, files_js_1.getAllFiles)(process.cwd());
+    const files = await (0, files_1.getAllFiles)(process.cwd());
     const spinner = (0, ora_1.default)(`Pushing ${files.length} files...`).start();
     try {
-        const data = await api_js_1.api.post('/cli/push', {
+        const data = await api_1.api.post('/cli/push', {
             repoId: config.repoId,
             branch: config.branch,
             files,

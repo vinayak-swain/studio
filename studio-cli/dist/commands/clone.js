@@ -7,9 +7,9 @@ exports.clone = clone;
 const chalk_1 = __importDefault(require("chalk"));
 const ora_1 = __importDefault(require("ora"));
 const path_1 = __importDefault(require("path"));
-const api_js_1 = require("../lib/api.js");
-const files_js_1 = require("../lib/files.js");
-const config_js_1 = require("../lib/config.js");
+const api_1 = require("../lib/api");
+const files_1 = require("../lib/files");
+const config_1 = require("../lib/config");
 async function clone(repoPath) {
     const [owner, repoName] = repoPath.split('/');
     if (!owner || !repoName) {
@@ -18,18 +18,15 @@ async function clone(repoPath) {
     }
     const spinner = (0, ora_1.default)(`Cloning ${repoPath}...`).start();
     try {
-        // In a real app, we'd need a way to find the repoId from owner/repoName
-        // For this prototype, we'll assume we have an endpoint for it or pass repoId directly
-        const repoInfo = await api_js_1.api.get('/cli/repos');
+        const repoInfo = await api_1.api.get('/cli/repos');
         const repo = repoInfo.find((r) => r.name === repoName);
         if (!repo)
             throw new Error('Repository not found.');
-        const data = await api_js_1.api.get('/cli/pull', { repoId: repo.id, branch: 'main' });
+        const data = await api_1.api.get('/cli/pull', { repoId: repo.id, branch: 'main' });
         const targetDir = path_1.default.join(process.cwd(), repoName);
-        await (0, files_js_1.writeFiles)(targetDir, data.files);
-        // Save config in the new directory
+        await (0, files_1.writeFiles)(targetDir, data.files);
         process.chdir(targetDir);
-        await (0, config_js_1.saveLocalConfig)({
+        await (0, config_1.saveLocalConfig)({
             repoId: repo.id,
             repoName: repo.name,
             owner: repo.ownerId,

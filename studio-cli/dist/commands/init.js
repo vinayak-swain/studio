@@ -7,8 +7,8 @@ exports.init = init;
 const inquirer_1 = __importDefault(require("inquirer"));
 const chalk_1 = __importDefault(require("chalk"));
 const ora_1 = __importDefault(require("ora"));
-const api_js_1 = require("../lib/api.js");
-const config_js_1 = require("../lib/config.js");
+const api_1 = require("../lib/api");
+const config_1 = require("../lib/config");
 async function init() {
     const answers = await inquirer_1.default.prompt([
         { type: 'input', name: 'name', message: 'Repository name:' },
@@ -17,8 +17,8 @@ async function init() {
     ]);
     const spinner = (0, ora_1.default)('Creating repository...').start();
     try {
-        const repo = await api_js_1.api.post('/cli/repos', answers);
-        await (0, config_js_1.saveLocalConfig)({
+        const repo = await api_1.api.post('/cli/repos', answers);
+        await (0, config_1.saveLocalConfig)({
             repoId: repo.id,
             repoName: repo.name,
             owner: repo.ownerId,

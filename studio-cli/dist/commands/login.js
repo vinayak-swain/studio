@@ -7,8 +7,8 @@ exports.login = login;
 const inquirer_1 = __importDefault(require("inquirer"));
 const chalk_1 = __importDefault(require("chalk"));
 const ora_1 = __importDefault(require("ora"));
-const api_js_1 = require("../lib/api.js");
-const config_js_1 = require("../lib/config.js");
+const api_1 = require("../lib/api");
+const config_1 = require("../lib/config");
 async function login() {
     const answers = await inquirer_1.default.prompt([
         { type: 'input', name: 'email', message: 'Email:' },
@@ -16,8 +16,8 @@ async function login() {
     ]);
     const spinner = (0, ora_1.default)('Logging in...').start();
     try {
-        const data = await api_js_1.api.post('/auth/cli-login', answers, false);
-        await (0, config_js_1.saveCredentials)(data);
+        const data = await api_1.api.post('/auth/cli-login', answers, false);
+        await (0, config_1.saveCredentials)(data);
         spinner.succeed(chalk_1.default.green(`Successfully logged in as ${data.name || data.email}!`));
     }
     catch (error) {

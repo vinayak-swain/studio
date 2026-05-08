@@ -6,17 +6,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.commit = commit;
 const chalk_1 = __importDefault(require("chalk"));
 const ora_1 = __importDefault(require("ora"));
-const api_js_1 = require("../lib/api.js");
-const config_js_1 = require("../lib/config.js");
+const api_1 = require("../lib/api");
+const config_1 = require("../lib/config");
 async function commit(message) {
-    const config = await (0, config_js_1.getLocalConfig)();
+    const config = await (0, config_1.getLocalConfig)();
     if (!config) {
         console.log(chalk_1.default.red('Not a studio repository.'));
         return;
     }
     const spinner = (0, ora_1.default)('Committing...').start();
     try {
-        const data = await api_js_1.api.post('/cli/commit', {
+        const data = await api_1.api.post('/cli/commit', {
             repoId: config.repoId,
             branch: config.branch,
             message
