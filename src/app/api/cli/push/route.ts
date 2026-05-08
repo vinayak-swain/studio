@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
 import { doc, getDoc, getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { analyzeCliPush } from '@/ai/flows/cli-code-analysis';
+import { verifyCliToken } from '@/lib/cli-auth';
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
@@ -11,35 +12,38 @@ export async function POST(req: Request) {
   }
 
   const token = authHeader.split(' ')[1];
+  const userData = await verifyCliToken(token);
+
+  if (!userData) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  }
+
   const { files, message, repoId } = await req.json();
 
   try {
     const { firebaseApp } = initializeFirebase();
     const db = getFirestore(firebaseApp);
 
-    // Validate token
-    const tokenDoc = await getDoc(doc(db, 'cli_tokens', token));
-    if (!tokenDoc.exists()) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // AI Analysis
+    const analysis = await analyzeCliPush({ files, message });
 
-    const userId = tokenDoc.data().userId;
-
-    // Simulate pushing code to Firestore (In reality, we'd use Storage)
-    const pushRef = await addDoc(collection(db, 'users', userId, 'repositories', repoId, 'pushes'), {
+    // Create push/commit record
+    const pushRef = await addDoc(collection(db, 'users', userData.userId, 'repositories', repoId, 'pushes'), {
       message,
       fileCount: files.length,
       createdAt: serverTimestamp(),
       pushedBy: 'CLI',
+      aiAnalysis: analysis,
     });
 
-    // AI Analysis
-    const analysis = await analyzeCliPush({ files, message });
+    // In a real app, we would also store the files themselves in Storage or specific collections
+    // For this prototype, we store the metadata and analysis
 
     return NextResponse.json({ 
       success: true, 
-      id: pushRef.id,
-      analysis 
+      commitId: pushRef.id,
+      fileCount: files.length,
+      aiAnalysis: analysis 
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

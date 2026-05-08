@@ -1,7 +1,8 @@
 
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { verifyCliToken } from '@/lib/cli-auth';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -13,24 +14,40 @@ export async function GET(req: Request) {
   }
 
   const token = authHeader.split(' ')[1];
+  const userData = await verifyCliToken(token);
+
+  if (!userData || !repoId) {
+    return NextResponse.json({ error: 'Unauthorized or missing parameters' }, { status: 401 });
+  }
 
   try {
     const { firebaseApp } = initializeFirebase();
     const db = getFirestore(firebaseApp);
 
-    // Validate token
-    const tokenDoc = await getDoc(doc(db, 'cli_tokens', token));
-    if (!tokenDoc.exists()) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    // Fetch the latest push for this repository to simulate pulling code
+    const pushesRef = collection(db, 'users', userData.userId, 'repositories', repoId, 'pushes');
+    const q = query(pushesRef, orderBy('createdAt', 'desc'), limit(1));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return NextResponse.json({ 
+        files: [],
+        message: 'No commits found',
+        commitId: 'none'
+      });
     }
 
-    // In a real app, we'd fetch actual files from Storage or a Git server
-    // For the prototype, we return a mock success
+    const latestPush = snapshot.docs[0].data();
+
+    // For the prototype, we return mock file contents associated with the latest state
     return NextResponse.json({ 
       success: true, 
+      commitId: snapshot.docs[0].id,
+      message: latestPush.message,
+      timestamp: latestPush.createdAt,
       files: [
-        { path: 'README.md', content: '# DevNest Project\nPulled from cloud.' },
-        { path: 'package.json', content: '{"name": "pulled-app"}' }
+        { path: 'README.md', content: `# ${latestPush.repoName || 'Project'}\nPulled from DevNest.` },
+        { path: 'package.json', content: '{\n  "name": "devnest-app",\n  "version": "1.0.0"\n}' }
       ] 
     });
   } catch (error: any) {
