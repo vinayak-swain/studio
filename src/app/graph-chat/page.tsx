@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -97,17 +96,19 @@ export default function GraphChatPage() {
           </TabsList>
 
           <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden m-0">
-            <Card className="flex-1 flex flex-col overflow-hidden border-border bg-card/50 backdrop-blur-sm">
+            <Card className="flex-1 flex flex-col overflow-hidden border-border bg-card/50 backdrop-blur-sm shadow-xl">
               <ScrollArea className="flex-1 p-6">
                 <div className="space-y-6">
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Network className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground">Ask Insight Bot anything</h3>
+                      <div className="mb-6 rounded-full bg-primary/5 p-6 border border-dashed border-primary/20">
+                        <Network className="h-12 w-12 text-primary/40" />
+                      </div>
+                      <h3 className="text-xl font-bold text-foreground">Ask Insight Bot anything</h3>
                       <p className="text-muted-foreground max-w-sm mt-2 text-sm">
                         I can help you navigate dependencies, find where modules are used, and link issues to your code.
                       </p>
-                      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
+                      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl px-4">
                         {[
                           'Which files depend on authentication?', 
                           'Where is the logging system used?', 
@@ -118,7 +119,7 @@ export default function GraphChatPage() {
                             key={q} 
                             variant="outline" 
                             size="sm" 
-                            className="justify-start h-auto py-3 px-4 text-left text-xs bg-background/50 hover:bg-background border-dashed"
+                            className="justify-start h-auto py-3 px-4 text-left text-xs bg-background/50 hover:bg-background border-dashed hover:border-primary/50 transition-all"
                             onClick={() => handleSend(q)}
                           >
                             {q}
@@ -129,14 +130,14 @@ export default function GraphChatPage() {
                   )}
 
                   {messages.map((m, i) => (
-                    <div key={i} className={`flex gap-4 ${m.role === 'model' ? 'bg-muted/30 p-4 rounded-lg' : ''}`}>
+                    <div key={i} className={`flex gap-4 ${m.role === 'model' ? 'bg-muted/30 p-5 rounded-xl border border-border/50' : 'px-2'}`}>
                       <div className="shrink-0 mt-1">
                         {m.role === 'user' ? (
-                          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-sm">
                             <User className="h-4 w-4 text-primary-foreground" />
                           </div>
                         ) : (
-                          <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                          <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center shadow-sm">
                             <Bot className="h-4 w-4 text-white" />
                           </div>
                         )}
@@ -145,18 +146,18 @@ export default function GraphChatPage() {
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                           {m.role === 'user' ? 'You' : 'Insight Bot'}
                         </p>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                           {m.content}
                         </div>
                         {m.sources && m.sources.length > 0 && (
-                          <div className="pt-3">
-                            <p className="text-[9px] font-bold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                          <div className="pt-4 mt-2 border-t border-border/40">
+                            <p className="text-[9px] font-bold uppercase text-muted-foreground mb-3 flex items-center gap-1">
                               <AlertCircle className="h-3 w-3" /> Linked References
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {m.sources.map((s, idx) => (
-                                <button key={idx} className="flex items-center gap-1.5 bg-background hover:bg-accent border px-2 py-1 rounded text-[10px] text-muted-foreground font-mono transition-colors group">
-                                  <FileText className="h-3 w-3 group-hover:text-primary" />
+                                <button key={idx} className="flex items-center gap-1.5 bg-background/50 hover:bg-accent border border-border/50 px-2.5 py-1.5 rounded-md text-[10px] text-muted-foreground font-mono transition-all hover:text-primary group">
+                                  <FileText className="h-3.5 w-3.5 group-hover:text-primary text-muted-foreground/50" />
                                   {s}
                                 </button>
                               ))}
@@ -180,9 +181,9 @@ export default function GraphChatPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     disabled={isLoading}
-                    className="flex-1 h-12 px-4 rounded-full border-muted-foreground/20 focus-visible:ring-primary shadow-inner"
+                    className="flex-1 h-12 px-6 rounded-full border-muted-foreground/20 focus-visible:ring-primary shadow-inner bg-background/50"
                   />
-                  <Button type="submit" disabled={isLoading || !input.trim()} className="h-12 w-12 rounded-full p-0">
+                  <Button type="submit" disabled={isLoading || !input.trim()} className="h-12 w-12 rounded-full p-0 shadow-lg hover:scale-105 transition-transform">
                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                   </Button>
                 </form>
