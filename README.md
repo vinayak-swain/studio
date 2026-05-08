@@ -49,3 +49,5 @@ To run this project on your local machine, follow these steps:
 - **Components**: ShadCN UI
 - **Database/Auth**: Firebase (Firestore & Auth)
 - **AI**: Genkit with Google Gemini
+
+........
