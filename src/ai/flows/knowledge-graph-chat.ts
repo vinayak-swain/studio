@@ -1,10 +1,13 @@
-
 'use server';
 /**
  * @fileOverview Knowledge Graph Chatbot flow for DevNest.
  * 
  * This flow uses tools to scan repository metadata, issues, and docs
  * to answer complex architectural and dependency questions.
+ * 
+ * - knowledgeGraphChat: The main flow function exported for use in the UI.
+ * - GraphChatInputSchema: Input schema for the chatbot.
+ * - GraphChatOutputSchema: Structured output schema for the chatbot response.
  */
 
 import { ai } from '@/ai/genkit';
@@ -19,56 +22,57 @@ const GraphChatInputSchema = z.object({
     content: z.string(),
   })).optional(),
 });
+export type GraphChatInput = z.infer<typeof GraphChatInputSchema>;
 
 const GraphChatOutputSchema = z.object({
   answer: z.string().describe('The AI response based on the knowledge graph discovery.'),
-  sources: z.array(z.string()).describe('List of files or entities referenced.'),
+  sources: z.array(z.string()).describe('List of files or entities referenced in the answer.'),
 });
+export type GraphChatOutput = z.infer<typeof GraphChatOutputSchema>;
 
-// Tools for discovery
+// Tool to fetch the current graph state
 const getFullKnowledgeGraph = ai.defineTool(
   {
     name: 'getFullKnowledgeGraph',
-    description: 'Fetches the entire knowledge graph including files, imports, and relations.',
+    description: 'Fetches the entire knowledge graph including files, imports, issues, and their relations.',
     inputSchema: z.object({}),
     outputSchema: z.any(),
   },
   async () => {
+    // This scans the real src directory of the project
     return await scanCodebase();
   }
 );
 
-// Define Prompt
+// Define the Prompt with specialized instructions for graph traversal
 const graphChatPrompt = ai.definePrompt({
   name: 'graphChatPrompt',
   tools: [getFullKnowledgeGraph],
   input: { schema: GraphChatInputSchema },
   output: { schema: GraphChatOutputSchema },
-  prompt: `You are the DevNest Insight Bot, an expert at analyzing codebases.
+  prompt: `You are the DevNest Insight Bot, an expert at analyzing codebase architecture and project dependencies.
   
-  Use the getFullKnowledgeGraph tool to understand the project structure.
+  Your goal is to answer technical questions about this project using the knowledge graph provided by the tools.
   
-  When asked about dependencies:
-  - Look for "depends_on" relations.
+  ### Instructions:
+  1. Call the 'getFullKnowledgeGraph' tool to see the project structure.
+  2. The graph contains nodes (files, issues, etc.) and relations (depends_on, relates_to).
+  3. For "What depends on X?": Find all nodes that have a 'depends_on' relation targeting X.
+  4. For "Where is X used?": Look for calls or imports pointing to X.
+  5. For "What issues relate to X?": Look for 'issue' type nodes with 'relates_to' pointing to X.
+  6. If you find multiple related files, list them in the 'sources' field.
   
-  When asked about issues:
-  - Look for "issue" type nodes and their "relates_to" relations.
+  Be precise. If a module isn't in the graph, say you couldn't find it.
   
-  Answer clearly and provide a list of sources (file paths or IDs) you used to find the answer.
-  
-  Current User Query: {{{query}}}
+  User Query: {{{query}}}
   `,
 });
 
-// Define Flow
-export const knowledgeGraphChat = ai.defineFlow(
-  {
-    name: 'knowledgeGraphChat',
-    inputSchema: GraphChatInputSchema,
-    outputSchema: GraphChatOutputSchema,
-  },
-  async (input) => {
-    const { output } = await graphChatPrompt(input);
-    return output!;
+// The exported flow function
+export async function knowledgeGraphChat(input: GraphChatInput): Promise<GraphChatOutput> {
+  const { output } = await graphChatPrompt(input);
+  if (!output) {
+    throw new Error('AI failed to generate a response for the graph query.');
   }
-);
+  return output;
+}
