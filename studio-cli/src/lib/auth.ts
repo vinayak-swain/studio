@@ -1,5 +1,5 @@
 
-import { getCredentials } from './config.js';
+import { getCredentials } from './config';
 
 export async function getAuthHeader() {
   const creds = await getCredentials();

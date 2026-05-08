@@ -2,8 +2,8 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { api } from '../lib/api.js';
-import { saveCredentials } from '../lib/config.js';
+import { api } from '../lib/api';
+import { saveCredentials } from '../lib/config';
 
 export async function login() {
   const answers = await inquirer.prompt([

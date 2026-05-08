@@ -1,7 +1,7 @@
 
 import chalk from 'chalk';
-import { getLocalConfig } from '../lib/config.js';
-import { getAllFiles } from '../lib/files.js';
+import { getLocalConfig } from '../lib/config';
+import { getAllFiles } from '../lib/files';
 
 export async function status() {
   const config = await getLocalConfig();

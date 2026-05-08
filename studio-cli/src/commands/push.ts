@@ -1,9 +1,9 @@
 
 import chalk from 'chalk';
 import ora from 'ora';
-import { api } from '../lib/api.js';
-import { getLocalConfig } from '../lib/config.js';
-import { getAllFiles } from '../lib/files.js';
+import { api } from '../lib/api';
+import { getLocalConfig } from '../lib/config';
+import { getAllFiles } from '../lib/files';
 
 export async function push() {
   const config = await getLocalConfig();

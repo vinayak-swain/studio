@@ -1,13 +1,13 @@
 
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { login } from './commands/login.js';
-import { init } from './commands/init.js';
-import { status } from './commands/status.js';
-import { commit } from './commands/commit.js';
-import { push } from './commands/push.js';
-import { pull } from './commands/pull.js';
-import { clone } from './commands/clone.js';
+import { login } from './commands/login';
+import { init } from './commands/init';
+import { status } from './commands/status';
+import { commit } from './commands/commit';
+import { push } from './commands/push';
+import { pull } from './commands/pull';
+import { clone } from './commands/clone';
 
 const program = new Command();
 

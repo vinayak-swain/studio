@@ -2,9 +2,9 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
-import { api } from '../lib/api.js';
-import { writeFiles } from '../lib/files.js';
-import { saveLocalConfig } from '../lib/config.js';
+import { api } from '../lib/api';
+import { writeFiles } from '../lib/files';
+import { saveLocalConfig } from '../lib/config';
 
 export async function clone(repoPath: string) {
   const [owner, repoName] = repoPath.split('/');
@@ -15,8 +15,6 @@ export async function clone(repoPath: string) {
 
   const spinner = ora(`Cloning ${repoPath}...`).start();
   try {
-    // In a real app, we'd need a way to find the repoId from owner/repoName
-    // For this prototype, we'll assume we have an endpoint for it or pass repoId directly
     const repoInfo = await api.get('/cli/repos');
     const repo = repoInfo.find((r: any) => r.name === repoName);
     
@@ -27,7 +25,6 @@ export async function clone(repoPath: string) {
 
     await writeFiles(targetDir, data.files);
     
-    // Save config in the new directory
     process.chdir(targetDir);
     await saveLocalConfig({
       repoId: repo.id,

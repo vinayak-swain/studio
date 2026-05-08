@@ -1,8 +1,8 @@
 
 import chalk from 'chalk';
 import ora from 'ora';
-import { api } from '../lib/api.js';
-import { getLocalConfig } from '../lib/config.js';
+import { api } from '../lib/api';
+import { getLocalConfig } from '../lib/config';
 
 export async function commit(message: string) {
   const config = await getLocalConfig();
