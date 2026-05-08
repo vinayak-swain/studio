@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -51,7 +52,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
 import { repositories } from '@/lib/data';
 import { signOut as firebaseSignOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Tooltip,
   TooltipContent,
@@ -60,24 +61,22 @@ import {
 } from '@/components/ui/tooltip';
 
 const primaryNav = [
-  { name: 'Home', icon: Home, href: '/dashboard', current: false },
-  { name: 'Insight Bot', icon: Network, href: '/graph-chat', current: true },
-  { name: 'Issues', icon: Book, href: '/issues', current: false },
+  { name: 'Home', icon: Home, href: '/dashboard' },
+  { name: 'Knowledge Center', icon: Network, href: '/graph-chat' },
+  { name: 'Issues', icon: Book, href: '/issues' },
   {
     name: 'Pull requests',
     icon: GitPullRequest,
     href: '/pulls',
-    current: false,
   },
-  { name: 'Projects', icon: Box, href: '/projects', current: false },
+  { name: 'Projects', icon: Box, href: '/projects' },
   {
     name: 'Discussions',
     icon: MessageSquare,
     href: '/discussions',
-    current: false,
   },
-  { name: 'Codespaces', icon: Rocket, href: '/codespaces', current: false },
-  { name: 'Copilot', icon: Cpu, href: '#', current: false },
+  { name: 'Codespaces', icon: Rocket, href: '/codespaces' },
+  { name: 'Copilot', icon: Cpu, href: '#' },
 ];
 
 const secondaryNav = [
@@ -90,6 +89,7 @@ export function DashboardHeader() {
   const { user } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
 
   const signOut = () => {
@@ -141,9 +141,10 @@ export function DashboardHeader() {
                       <li key={item.name}>
                         <Link
                           href={item.href}
+                          onClick={() => setOpen(false)}
                           className={cn(
                             'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium',
-                            item.current
+                            pathname === item.href
                               ? 'bg-accent text-accent-foreground'
                               : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                           )}
@@ -162,7 +163,13 @@ export function DashboardHeader() {
                       <li key={item.name}>
                         <Link
                           href={item.href}
-                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                          onClick={() => setOpen(false)}
+                          className={cn(
+                            'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium',
+                            pathname === item.href
+                              ? 'bg-accent text-accent-foreground'
+                              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                          )}
                         >
                           <item.icon className="h-4 w-4" />
                           <span>{item.name}</span>
