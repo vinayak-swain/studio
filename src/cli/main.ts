@@ -1,3 +1,4 @@
+
 #!/usr/bin/env tsx
 import { Command } from 'commander';
 import chalk from 'chalk';
@@ -9,6 +10,9 @@ import path from 'path';
 const program = new Command();
 const CONFIG_FILE = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.studio-dvcs-config');
 const LOCAL_REPO_CONFIG = '.studio-dvcs';
+
+// Helper to get base URL
+const getBaseUrl = () => (process.env.DEVNEST_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 // Helper to get stored token
 async function getAuth() {
@@ -34,7 +38,8 @@ program
 
     const spinner = ora('Authenticating...').start();
     try {
-      const response = await fetch('http://localhost:3000/api/auth/cli-login', {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/auth/cli-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(answers),
@@ -47,6 +52,7 @@ program
       spinner.succeed(chalk.green('Successfully logged in!'));
     } catch (error: any) {
       spinner.fail(chalk.red(`Login failed: ${error.message}`));
+      console.log(chalk.gray(`\nTip: Ensure the server is running at ${getBaseUrl()}`));
     }
   });
 
@@ -99,7 +105,8 @@ program
 
       await walk('.');
 
-      const response = await fetch('http://localhost:3000/api/cli/push', {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/api/cli/push`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -125,6 +132,7 @@ program
       
     } catch (error: any) {
       spinner.fail(chalk.red(`Push failed: ${error.message}`));
+      console.log(chalk.gray(`\nTip: Ensure the server is running at ${getBaseUrl()}`));
     }
   });
 
@@ -138,7 +146,8 @@ program
 
     const spinner = ora('Pulling changes...').start();
     try {
-      const res = await fetch(`http://localhost:3000/api/cli/pull?repoId=${repoConfig.repoId}`, {
+      const baseUrl = getBaseUrl();
+      const res = await fetch(`${baseUrl}/api/cli/pull?repoId=${repoConfig.repoId}`, {
         headers: { 'Authorization': `Bearer ${auth.token}` }
       });
       const data = await res.json();
@@ -154,6 +163,7 @@ program
       spinner.succeed(chalk.green('Pull complete.'));
     } catch (error: any) {
       spinner.fail(chalk.red(`Pull failed: ${error.message}`));
+      console.log(chalk.gray(`\nTip: Ensure the server is running at ${getBaseUrl()}`));
     }
   });
 

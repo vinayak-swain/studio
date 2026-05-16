@@ -10,30 +10,28 @@ const path_1 = __importDefault(require("path"));
 const api_1 = require("../lib/api");
 const files_1 = require("../lib/files");
 const config_1 = require("../lib/config");
-async function clone(repoPath) {
-    const [owner, repoName] = repoPath.split('/');
-    if (!owner || !repoName) {
-        console.log(chalk_1.default.red('Invalid repo path. Use "owner/repo".'));
-        return;
-    }
-    const spinner = (0, ora_1.default)(`Cloning ${repoPath}...`).start();
+/**
+ * Implements 'studio clone <repoId>'.
+ * Downloads an entire repository and initializes the local tracking config.
+ */
+async function clone(repoId) {
+    const spinner = (0, ora_1.default)(`Cloning repository ${repoId}...`).start();
     try {
-        const repoInfo = await api_1.api.get('/cli/repos');
-        const repo = repoInfo.find((r) => r.name === repoName);
-        if (!repo)
-            throw new Error('Repository not found.');
-        const data = await api_1.api.get('/cli/pull', { repoId: repo.id, branch: 'main' });
-        const targetDir = path_1.default.join(process.cwd(), repoName);
+        // 1. Fetch remote content
+        const data = await api_1.api.get('/cli/pull', { repoId, branch: 'main' });
+        // 2. Create target directory
+        const targetDir = path_1.default.join(process.cwd(), repoId);
         await (0, files_1.writeFiles)(targetDir, data.files);
+        // 3. Save tracking config in the new directory
         process.chdir(targetDir);
         await (0, config_1.saveLocalConfig)({
-            repoId: repo.id,
-            repoName: repo.name,
-            owner: repo.ownerId,
-            remote: `studio-dvcs.com/${repo.ownerId}/${repo.name}`,
+            repoId: repoId,
+            repoName: repoId,
+            owner: 'remote',
+            remote: `studio-dvcs.com/${repoId}`,
             branch: 'main'
         });
-        spinner.succeed(chalk_1.default.green(`✅ Successfully cloned into ${repoName}`));
+        spinner.succeed(chalk_1.default.green(`✅ Successfully cloned into ./${repoId}`));
     }
     catch (error) {
         spinner.fail(chalk_1.default.red(`Clone failed: ${error.response?.data?.error || error.message}`));
