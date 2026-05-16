@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import {
   initiateEmailSignUp,
   initiateEmailSignIn,
@@ -21,7 +22,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { Logo } from '../icons/logo';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -37,8 +39,17 @@ type AuthFormProps = {
 
 export function AuthForm({ isSignUp }: AuthFormProps) {
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema.refine(
@@ -60,15 +71,50 @@ export function AuthForm({ isSignUp }: AuthFormProps) {
     try {
       if (isSignUp) {
         await initiateEmailSignUp(auth, values.email, values.password, values.name || '');
+        toast({
+          title: "Account created!",
+          description: "Welcome to DevNest.",
+        });
       } else {
         await initiateEmailSignIn(auth, values.email, values.password);
+        toast({
+          title: "Welcome back!",
+          description: "Successfully signed in.",
+        });
       }
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Authentication error:', error);
+      let message = "An error occurred during authentication.";
+      
+      if (error.code === 'auth/wrong-password') {
+        message = "Incorrect password. Please try again.";
+      } else if (error.code === 'auth/user-not-found') {
+        message = "No account found with this email.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = "This email is already registered.";
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-email') {
+        message = "Invalid email or password.";
+      } else if (error.code === 'auth/too-many-requests') {
+        message = "Too many failed attempts. Please try again later.";
+      }
+      
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: message,
+      });
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-muted-foreground animate-pulse">Loading...</p>
+      </div>
+    );
   }
 
   return (
