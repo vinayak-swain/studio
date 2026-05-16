@@ -452,10 +452,10 @@ function RepositoryPageContent() {
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">1. Install CLI</Label>
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">1. Setup CLI (Run once)</Label>
                       <div className="flex gap-2">
-                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">npm install -g studio-dvcs</code>
-                        <Button variant="outline" size="sm" onClick={() => copyTerminalCmd('npm install -g studio-dvcs')}><Copy className="h-3 w-3" /></Button>
+                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">cd studio-cli && npm install && npm run build && npm link</code>
+                        <Button variant="outline" size="sm" onClick={() => copyTerminalCmd('cd studio-cli && npm install && npm run build && npm link')}><Copy className="h-3 w-3" /></Button>
                       </div>
                     </div>
                     <div className="space-y-2">

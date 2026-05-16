@@ -42,9 +42,9 @@ To run this project on your local machine, follow these steps:
    npm run genkit:dev
    ```
 
-## Studio CLI (DVCS)
+## Studio CLI (DVCS) Setup
 
-DevNest comes with a powerful CLI tool for terminal-based version control with AI insights. **Note: All commands must be prefixed with `studio`.**
+DevNest comes with a powerful CLI tool for terminal-based version control with AI insights. Since this is a local development environment, you need to link the CLI package to use it globally.
 
 ### Local CLI Setup
 
@@ -66,12 +66,11 @@ DevNest comes with a powerful CLI tool for terminal-based version control with A
 ### Common Commands (Always prefix with 'studio')
 
 - `studio login`: Authenticate with your DevNest account.
-- `studio init`: Initialize a new repository in the current folder.
+- `studio init <repoId>`: Initialize a repository tracking in current folder.
 - `studio status`: See local sync status and tracked files.
-- `studio push`: Push all local files to the cloud with AI code analysis.
+- `studio push "message"`: Push all local files to the cloud with AI code analysis.
 - `studio pull`: Pull the latest state from the cloud.
-- `studio commit "message"`: Create a local commit with AI-generated risk scoring.
-- `studio clone <owner/repo>`: Clone a repository from DevNest.
+- `studio clone <repoId>`: Clone a repository from DevNest.
 
 ## Technical Architecture
 
