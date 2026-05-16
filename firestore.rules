@@ -58,7 +58,36 @@ service cloud.firestore {
 
         // The owner can update or delete their own repository.
         allow update, delete: if isOwner(userId);
+
+        /**
+         * @description
+         *   Allows the owner to access all subcollections of the repository
+         *   (e.g., /files, /commits, /pushes).
+         */
+        match /{allSubcollections=**} {
+          allow read, write: if isOwner(userId);
+        }
       }
+    }
+
+    /**
+     * @description
+     *   Secures the knowledge graph nodes.
+     * @path
+     *   /knowledge_graph/{nodeId}
+     */
+    match /knowledge_graph/{nodeId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn(); // In production, this might be restricted to automated scan processes.
+    }
+    
+    /**
+     * @description
+     *   Secures CLI tokens.
+     */
+    match /cli_tokens/{token} {
+      allow get: if true; // The CLI needs to check if a token exists.
+      allow create: if isSignedIn();
     }
   }
 }
