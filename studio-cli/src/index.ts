@@ -12,44 +12,50 @@ const program = new Command();
 
 program
   .name('studio')
-  .description('DevNest CLI - A cozy version control tool')
+  .description('DevNest CLI - Terminal workflow with AI code analysis')
   .version('1.0.0');
 
 program
   .command('login')
-  .description('Login to DevNest')
+  .description('Authenticate with your DevNest account')
   .action(login);
 
 program
   .command('init')
-  .description('Initialize a new repository')
-  .action(init);
+  .description('Initialize current folder as a DevNest repository')
+  .argument('<repoId>', 'The repository ID from your dashboard')
+  .action(async (repoId) => {
+    const { saveLocalConfig } = await import('./lib/config');
+    await saveLocalConfig({
+      repoId,
+      repoName: repoId,
+      owner: 'me',
+      remote: 'devnest.app',
+      branch: 'main'
+    });
+    console.log(`✅ Initialized repository: ${repoId}`);
+  });
 
 program
   .command('status')
-  .description('Show local repository status')
+  .description('Check synchronization status')
   .action(status);
 
 program
-  .command('commit')
-  .description('Commit local changes')
-  .argument('<message>', 'Commit message')
-  .action(commit);
-
-program
   .command('push')
-  .description('Push changes to DevNest')
+  .description('Push changes to DevNest and get AI analysis')
+  .argument('[message]', 'Commit message')
   .action(push);
 
 program
   .command('pull')
-  .description('Pull changes from DevNest')
+  .description('Pull latest changes from DevNest')
   .action(pull);
 
 program
   .command('clone')
-  .description('Clone a repository')
-  .argument('<repo>', 'Repository path (owner/repo)')
+  .description('Clone an existing repository')
+  .argument('<repoId>', 'The repository ID to clone')
   .action(clone);
 
 program.parse();

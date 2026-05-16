@@ -1,4 +1,3 @@
-
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
@@ -6,35 +5,32 @@ import { api } from '../lib/api';
 import { writeFiles } from '../lib/files';
 import { saveLocalConfig } from '../lib/config';
 
-export async function clone(repoPath: string) {
-  const [owner, repoName] = repoPath.split('/');
-  if (!owner || !repoName) {
-    console.log(chalk.red('Invalid repo path. Use "owner/repo".'));
-    return;
-  }
-
-  const spinner = ora(`Cloning ${repoPath}...`).start();
+/**
+ * Implements 'studio clone <repoId>'.
+ * Downloads an entire repository and initializes the local tracking config.
+ */
+export async function clone(repoId: string) {
+  const spinner = ora(`Cloning repository ${repoId}...`).start();
+  
   try {
-    const repoInfo = await api.get('/cli/repos');
-    const repo = repoInfo.find((r: any) => r.name === repoName);
+    // 1. Fetch remote content
+    const data = await api.get('/cli/pull', { repoId, branch: 'main' });
     
-    if (!repo) throw new Error('Repository not found.');
-
-    const data = await api.get('/cli/pull', { repoId: repo.id, branch: 'main' });
-    const targetDir = path.join(process.cwd(), repoName);
-
+    // 2. Create target directory
+    const targetDir = path.join(process.cwd(), repoId);
     await writeFiles(targetDir, data.files);
     
+    // 3. Save tracking config in the new directory
     process.chdir(targetDir);
     await saveLocalConfig({
-      repoId: repo.id,
-      repoName: repo.name,
-      owner: repo.ownerId,
-      remote: `studio-dvcs.com/${repo.ownerId}/${repo.name}`,
+      repoId: repoId,
+      repoName: repoId,
+      owner: 'remote',
+      remote: `studio-dvcs.com/${repoId}`,
       branch: 'main'
     });
 
-    spinner.succeed(chalk.green(`✅ Successfully cloned into ${repoName}`));
+    spinner.succeed(chalk.green(`✅ Successfully cloned into ./${repoId}`));
   } catch (error: any) {
     spinner.fail(chalk.red(`Clone failed: ${error.response?.data?.error || error.message}`));
   }

@@ -1,31 +1,43 @@
-
 import fs from 'fs-extra';
 import path from 'path';
 
-const IGNORE_LIST = ['node_modules', '.git', '.next', 'dist', '.studio'];
+// Standard ignore list for a coding environment
+const IGNORE_LIST = ['node_modules', '.git', '.next', 'dist', '.studio', '.studio-dvcs', '.DS_Store'];
 
+/**
+ * Recursively scans a directory for files, excluding ignored patterns.
+ * Returns an array of paths and their UTF-8 content.
+ */
 export async function getAllFiles(dir: string, baseDir = dir): Promise<{ path: string; content: string }[]> {
   const results: { path: string; content: string }[] = [];
-  const files = await fs.readdir(dir);
+  const items = await fs.readdir(dir);
 
-  for (const file of files) {
-    if (IGNORE_LIST.includes(file)) continue;
+  for (const item of items) {
+    if (IGNORE_LIST.includes(item)) continue;
 
-    const fullPath = path.join(dir, file);
+    const fullPath = path.join(dir, item);
     const stat = await fs.stat(fullPath);
 
     if (stat.isDirectory()) {
       results.push(...(await getAllFiles(fullPath, baseDir)));
     } else {
-      const content = await fs.readFile(fullPath, 'utf8');
-      const relativePath = path.relative(baseDir, fullPath);
-      results.push({ path: relativePath, content });
+      try {
+        const content = await fs.readFile(fullPath, 'utf8');
+        const relativePath = path.relative(baseDir, fullPath);
+        results.push({ path: relativePath, content });
+      } catch (e) {
+        // Skip binary files or unreadable files for the prototype
+        continue;
+      }
     }
   }
 
   return results;
 }
 
+/**
+ * Writes a batch of files to the specified directory.
+ */
 export async function writeFiles(baseDir: string, files: { path: string; content: string }[]) {
   for (const file of files) {
     const fullPath = path.join(baseDir, file.path);
