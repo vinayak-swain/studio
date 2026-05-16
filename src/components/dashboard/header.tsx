@@ -30,7 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Logo } from '../icons/logo';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser } from '@/firebase/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
