@@ -1,10 +1,11 @@
+
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { doc, getFirestore, collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { initializeAdmin } from '@/lib/firebase-admin';
 import { verifyCliToken } from '@/lib/cli-auth';
 
 /**
  * Sends all current repository files to the CLI for local synchronization.
+ * Uses Admin SDK to bypass rules for authorized CLI pull requests.
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -23,34 +24,27 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { firebaseApp } = initializeFirebase();
-    const db = getFirestore(firebaseApp);
+    const { adminDb } = initializeAdmin();
 
-    // Fetch all files currently in the repo
-    const filesRef = collection(db, 'users', userData.userId, 'repositories', repoId, 'files');
-    const snapshot = await getDocs(filesRef);
+    const repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
+    const filesSnap = await repoRef.collection('files').get();
 
-    const files = snapshot.docs.map(doc => ({
+    const files = filesSnap.docs.map(doc => ({
       path: doc.data().path,
       content: doc.data().content
     }));
 
-    // Get latest commit metadata
-    const commitsQuery = query(
-      collection(db, 'users', userData.userId, 'repositories', repoId, 'commits'),
-      orderBy('createdAt', 'desc'),
-      limit(1)
-    );
-    const commitSnap = await getDocs(commitsQuery);
-    const lastCommit = commitSnap.docs[0]?.data() || { message: 'Initial state' };
+    const commitsSnap = await repoRef.collection('commits').orderBy('createdAt', 'desc').limit(1).get();
+    const lastCommit = commitsSnap.docs[0]?.data() || { message: 'Initial state' };
 
     return NextResponse.json({ 
       success: true, 
       files,
       message: lastCommit.message,
-      commitId: commitSnap.docs[0]?.id || 'initial'
+      commitId: commitsSnap.docs[0]?.id || 'initial'
     });
   } catch (error: any) {
+    console.error('CLI Pull Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

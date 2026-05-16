@@ -1,9 +1,11 @@
 
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { initializeAdmin } from '@/lib/firebase-admin';
 import { verifyCliToken } from '@/lib/cli-auth';
 
+/**
+ * Lists repositories for the authenticated CLI user.
+ */
 export async function GET(req: Request) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -18,13 +20,11 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { firebaseApp } = initializeFirebase();
-    const db = getFirestore(firebaseApp);
+    const { adminDb } = initializeAdmin();
     
-    const reposRef = collection(db, 'users', userData.userId, 'repositories');
-    const snapshot = await getDocs(reposRef);
+    const reposSnap = await adminDb.collection('users').doc(userData.userId).collection('repositories').get();
     
-    const repositories = snapshot.docs.map(doc => ({
+    const repositories = reposSnap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));

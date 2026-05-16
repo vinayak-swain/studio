@@ -1,10 +1,13 @@
 
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { doc, getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeAdmin } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { verifyCliToken } from '@/lib/cli-auth';
 import { analyzeCliPush } from '@/ai/flows/cli-code-analysis';
 
+/**
+ * Records a local commit metadata in the remote repository.
+ */
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -21,18 +24,19 @@ export async function POST(req: Request) {
   const { message, repoId, changes } = await req.json();
 
   try {
-    const { firebaseApp } = initializeFirebase();
-    const db = getFirestore(firebaseApp);
+    const { adminDb } = initializeAdmin();
+    const repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
 
-    // Mock analysis for a metadata-only commit (since files aren't sent in 'commit')
-    // In a real DVCS, commit might just record the local state diff
+    // Metadata analysis
     const analysis = await analyzeCliPush({ files: [], message });
 
-    const commitRef = await addDoc(collection(db, 'users', userData.userId, 'repositories', repoId, 'commits'), {
+    const commitRef = await repoRef.collection('commits').add({
       message,
       changesSummary: changes,
-      createdAt: serverTimestamp(),
-      aiAnalysis: analysis
+      createdAt: FieldValue.serverTimestamp(),
+      aiAnalysis: analysis,
+      author: userData.name || userData.email,
+      authorId: userData.userId,
     });
 
     return NextResponse.json({ 

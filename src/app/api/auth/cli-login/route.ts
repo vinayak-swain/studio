@@ -1,27 +1,30 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
+import { initializeAdmin } from '@/lib/firebase-admin';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getFirestore } from 'firebase/firestore';
 import crypto from 'crypto';
 
 /**
  * Handles terminal-based login requests.
- * Authenticates with Firebase and returns a persistent CLI token.
+ * Authenticates credentials via Client SDK, then stores token via Admin SDK.
  */
 export async function POST(req: Request) {
   const { email, password } = await req.json();
 
   try {
-    const { auth, firebaseApp } = initializeFirebase();
+    // 1. Verify credentials using Client SDK Auth
+    const { auth } = initializeFirebase();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Generate a secure 64-character CLI token
+    // 2. Generate a secure CLI token
     const token = crypto.randomBytes(32).toString('hex');
-    const db = getFirestore(firebaseApp);
-
-    // Store token in Firestore for verification by other CLI endpoints
-    await setDoc(doc(db, 'cli_tokens', token), {
+    
+    // 3. Use Admin SDK to store the token (bypassing rules)
+    const { adminDb } = initializeAdmin();
+    
+    await adminDb.collection('cli_tokens').doc(token).set({
       userId: user.uid,
       email: user.email,
       name: user.displayName || user.email?.split('@')[0],

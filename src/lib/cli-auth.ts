@@ -1,18 +1,22 @@
-import { initializeFirebase } from '@/firebase';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+
+import { initializeAdmin } from './firebase-admin';
 
 /**
- * Verifies a CLI token against the Firestore 'cli_tokens' collection.
+ * Verifies a CLI token using the Admin SDK.
+ * Bypasses security rules to check token existence and validity.
  */
 export async function verifyCliToken(token: string) {
   try {
-    const { firebaseApp } = initializeFirebase();
-    const db = getFirestore(firebaseApp);
+    const { adminDb } = initializeAdmin();
     
-    const tokenDoc = await getDoc(doc(db, 'cli_tokens', token));
+    const tokenDoc = await adminDb.collection('cli_tokens').doc(token).get();
     
-    if (tokenDoc.exists()) {
-      return tokenDoc.data();
+    if (tokenDoc.exists) {
+      return tokenDoc.data() as {
+        userId: string;
+        email: string;
+        name: string;
+      };
     }
     return null;
   } catch (error) {
