@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { 
@@ -8,6 +8,7 @@ import {
   useDoc, 
   useCollection, 
   useMemoFirebase,
+  useUser,
 } from '@/firebase';
 import { 
   doc, 
@@ -15,6 +16,9 @@ import {
   query, 
   orderBy, 
   limit, 
+  setDoc,
+  addDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { 
   Book, 
@@ -28,6 +32,11 @@ import {
   Info,
   Copy,
   Check,
+  Plus,
+  FileCode,
+  FileJson,
+  FileBox,
+  FilePlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,11 +44,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { formatDistanceToNow } from 'date-fns';
+import { calculateLanguageStats, getLanguageByPath } from '@/lib/languages';
 
 interface Repository {
   id: string;
@@ -76,7 +99,14 @@ function RepositoryPageContent() {
   const repoId = params.repoId as string;
   const ownerId = searchParams.get('owner');
   const firestore = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+  
   const [copied, setCopied] = useState(false);
+  const [isAddFileOpen, setIsAddFileOpen] = useState(false);
+  const [newFilePath, setNewFilePath] = useState('');
+  const [newFileContent, setNewFileContent] = useState('');
+  const [isSavingFile, setIsSavingFile] = useState(false);
 
   // Memoized Repo Reference
   const repoDocRef = useMemoFirebase(() => {
@@ -103,10 +133,77 @@ function RepositoryPageContent() {
   const { data: commits, isLoading: isCommitsLoading } = useCollection<Commit>(commitsQuery);
 
   const copyCloneUrl = () => {
-    const url = `studio clone ${ownerId}/${repo?.name}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const url = `https://devnext.app/repo/${ownerId}/${repo?.name}.git`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      toast({
+        title: 'Copied to clipboard',
+        description: 'Repository clone URL copied.',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to copy to clipboard.',
+      });
+    });
+  };
+
+  const handleAddFile = async () => {
+    if (!repoDocRef || !user || !newFilePath.trim()) return;
+
+    setIsSavingFile(true);
+    try {
+      const fileId = newFilePath.replace(/\//g, '_');
+      const fileRef = doc(repoDocRef, 'files', fileId);
+      
+      // 1. Create the file
+      await setDoc(fileRef, {
+        path: newFilePath,
+        content: newFileContent,
+        updatedAt: serverTimestamp(),
+      });
+
+      // 2. Create a commit
+      await addDoc(collection(repoDocRef, 'commits'), {
+        message: `Create ${newFilePath}`,
+        author: user.displayName || user.email || 'User',
+        authorId: user.uid,
+        createdAt: serverTimestamp(),
+        hash: Math.random().toString(36).substring(2, 10),
+      });
+
+      toast({
+        title: 'File created',
+        description: `${newFilePath} has been added to the repository.`,
+      });
+      
+      setIsAddFileOpen(false);
+      setNewFilePath('');
+      setNewFileContent('');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Could not create file.',
+      });
+    } finally {
+      setIsSavingFile(false);
+    }
+  };
+
+  const langStats = useMemo(() => {
+    return calculateLanguageStats(files || []);
+  }, [files]);
+
+  const getFileIcon = (path: string) => {
+    const lang = getLanguageByPath(path);
+    if (path.includes('/')) return <Folder className="h-4 w-4 text-blue-400" />;
+    if (lang?.name === 'TypeScript' || lang?.name === 'JavaScript') return <FileCode className="h-4 w-4 text-yellow-500" />;
+    if (lang?.name === 'JSON') return <FileJson className="h-4 w-4 text-orange-400" />;
+    if (lang?.name === 'Markdown') return <FileText className="h-4 w-4 text-muted-foreground" />;
+    return <FileBox className="h-4 w-4 text-muted-foreground" />;
   };
 
   if (isRepoLoading) {
@@ -208,9 +305,53 @@ function RepositoryPageContent() {
                       {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                       Clone
                     </Button>
-                    <Button className="h-8 bg-green-600 hover:bg-green-700 text-white" size="sm">
-                      Add file <ChevronDown className="ml-1 h-3 w-3" />
-                    </Button>
+                    
+                    <Dialog open={isAddFileOpen} onOpenChange={setIsAddFileOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="h-8 bg-green-600 hover:bg-green-700 text-white" size="sm">
+                          Add file <ChevronDown className="ml-1 h-3 w-3" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-xl">
+                        <DialogHeader>
+                          <DialogTitle>Create new file</DialogTitle>
+                          <DialogDescription>
+                            Create a new file in the root of your repository.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="path">File name (with extension)</Label>
+                            <Input
+                              id="path"
+                              placeholder="e.g. index.ts"
+                              value={newFilePath}
+                              onChange={(e) => setNewFilePath(e.target.value)}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="content">Content</Label>
+                            <Textarea
+                              id="content"
+                              placeholder="Type your code here..."
+                              className="min-h-[200px] font-mono text-xs"
+                              value={newFileContent}
+                              onChange={(e) => setNewFileContent(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setIsAddFileOpen(false)}>Cancel</Button>
+                          <Button 
+                            className="bg-green-600 hover:bg-green-700 text-white" 
+                            onClick={handleAddFile}
+                            disabled={isSavingFile || !newFilePath.trim()}
+                          >
+                            {isSavingFile ? 'Saving...' : 'Create file'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
 
@@ -235,17 +376,20 @@ function RepositoryPageContent() {
                       files.map(file => (
                         <div key={file.id} className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer">
                           <div className="w-8 shrink-0">
-                            {file.path.includes('/') ? <Folder className="h-4 w-4 text-blue-400" /> : <FileText className="h-4 w-4 text-muted-foreground" />}
+                            {getFileIcon(file.path)}
                           </div>
                           <span className="text-sm flex-1 group-hover:text-blue-500">{file.path}</span>
                           <span className="text-xs text-muted-foreground hidden md:block">Update {file.path}</span>
-                          <span className="text-xs text-muted-foreground w-24 text-right">Today</span>
+                          <span className="text-xs text-muted-foreground w-24 text-right">
+                            {file.updatedAt ? formatDistanceToNow(file.updatedAt.toDate()) + ' ago' : 'Today'}
+                          </span>
                         </div>
                       ))
                     ) : (
                       <div className="p-12 text-center text-muted-foreground">
-                        <Folder className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                        <p>No files found in this repository.</p>
+                        <FilePlus className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                        <p className="font-semibold text-foreground">Repository is empty</p>
+                        <p className="text-sm mt-1">Add your first file to get started.</p>
                       </div>
                     )}
                   </div>
@@ -313,27 +457,29 @@ function RepositoryPageContent() {
 
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">Languages</h3>
-              <div className="space-y-2">
-                <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
-                  <div className="bg-blue-500 h-full w-[70%]" />
-                  <div className="bg-yellow-500 h-full w-[20%]" />
-                  <div className="bg-orange-500 h-full w-[10%]" />
+              {langStats.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
+                    {langStats.map((stat, i) => (
+                      <div 
+                        key={i} 
+                        className={stat.color} 
+                        style={{ width: `${stat.percentage}%` }} 
+                      />
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {langStats.map((stat, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-xs">
+                        <span className={`h-2 w-2 rounded-full ${stat.color}`} />
+                        <strong>{stat.name}</strong> {stat.percentage}%
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="h-2 w-2 rounded-full bg-blue-500" />
-                    <strong>TypeScript</strong> 70.0%
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                    <strong>JavaScript</strong> 20.0%
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="h-2 w-2 rounded-full bg-orange-500" />
-                    <strong>HTML</strong> 10.0%
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No languages detected yet</p>
+              )}
             </div>
           </div>
         </div>
