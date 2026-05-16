@@ -22,10 +22,14 @@ export const LANGUAGE_MAP: Record<string, LanguageInfo> = {
   '.cpp': { name: 'C++', color: 'bg-pink-600', extension: '.cpp' },
   '.go': { name: 'Go', color: 'bg-cyan-500', extension: '.go' },
   '.rs': { name: 'Rust', color: 'bg-orange-700', extension: '.rs' },
+  '.sql': { name: 'SQL', color: 'bg-blue-400', extension: '.sql' },
+  '.sh': { name: 'Shell', color: 'bg-green-400', extension: '.sh' },
 };
 
 export function getLanguageByPath(path: string): LanguageInfo | null {
-  const ext = path.substring(path.lastIndexOf('.')).toLowerCase();
+  const dotIndex = path.lastIndexOf('.');
+  if (dotIndex === -1) return null;
+  const ext = path.substring(dotIndex).toLowerCase();
   return LANGUAGE_MAP[ext] || null;
 }
 
@@ -38,7 +42,8 @@ export function calculateLanguageStats(files: { path: string; content: string }[
   files.forEach((file) => {
     const lang = getLanguageByPath(file.path);
     if (lang) {
-      const size = file.content.length;
+      // Use character count as a proxy for size
+      const size = (file.content || '').length || 1; // Minimum 1 to show even empty files
       if (!stats[lang.name]) {
         stats[lang.name] = { size: 0, color: lang.color };
       }

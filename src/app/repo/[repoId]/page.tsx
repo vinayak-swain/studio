@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { 
@@ -18,6 +18,7 @@ import {
   limit, 
   setDoc,
   addDoc,
+  updateDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { 
@@ -37,6 +38,9 @@ import {
   FileJson,
   FileBox,
   FilePlus,
+  ArrowLeft,
+  Save,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -108,6 +112,12 @@ function RepositoryPageContent() {
   const [newFileContent, setNewFileContent] = useState('');
   const [isSavingFile, setIsSavingFile] = useState(false);
 
+  // Editor State
+  const [viewingFile, setViewingFile] = useState<RepoFile | null>(null);
+  const [editorContent, setEditorContent] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   // Memoized Repo Reference
   const repoDocRef = useMemoFirebase(() => {
     if (!firestore || !repoId || !ownerId) return null;
@@ -133,7 +143,7 @@ function RepositoryPageContent() {
   const { data: commits, isLoading: isCommitsLoading } = useCollection<Commit>(commitsQuery);
 
   const copyCloneUrl = () => {
-    const url = `https://devnext.app/repo/${ownerId}/${repo?.name}.git`;
+    const url = `https://devnest.app/repo/${ownerId}/${repo?.name}.git`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       toast({
@@ -158,14 +168,12 @@ function RepositoryPageContent() {
       const fileId = newFilePath.replace(/\//g, '_');
       const fileRef = doc(repoDocRef, 'files', fileId);
       
-      // 1. Create the file
       await setDoc(fileRef, {
         path: newFilePath,
         content: newFileContent,
         updatedAt: serverTimestamp(),
       });
 
-      // 2. Create a commit
       await addDoc(collection(repoDocRef, 'commits'), {
         message: `Create ${newFilePath}`,
         author: user.displayName || user.email || 'User',
@@ -193,9 +201,66 @@ function RepositoryPageContent() {
     }
   };
 
+  const handleUpdateFile = async () => {
+    if (!repoDocRef || !user || !viewingFile) return;
+
+    setIsUpdating(true);
+    try {
+      const fileRef = doc(repoDocRef, 'files', viewingFile.id);
+      
+      await updateDoc(fileRef, {
+        content: editorContent,
+        updatedAt: serverTimestamp(),
+      });
+
+      await addDoc(collection(repoDocRef, 'commits'), {
+        message: `Update ${viewingFile.path}`,
+        author: user.displayName || user.email || 'User',
+        authorId: user.uid,
+        createdAt: serverTimestamp(),
+        hash: Math.random().toString(36).substring(2, 10),
+      });
+
+      toast({
+        title: 'Changes saved',
+        description: `${viewingFile.path} has been updated.`,
+      });
+      
+      setIsEditing(false);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Could not save changes.',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleOpenFile = (file: RepoFile) => {
+    setViewingFile(file);
+    setEditorContent(file.content);
+    setIsEditing(false);
+  };
+
   const langStats = useMemo(() => {
-    return calculateLanguageStats(files || []);
+    if (!files) return [];
+    return calculateLanguageStats(files);
   }, [files]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        if (isEditing && viewingFile) {
+          e.preventDefault();
+          handleUpdateFile();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, viewingFile, editorContent]);
 
   const getFileIcon = (path: string) => {
     const lang = getLanguageByPath(path);
@@ -291,144 +356,206 @@ function RepositoryPageContent() {
               </TabsList>
 
               <TabsContent value="code" className="pt-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-8 gap-2 bg-muted/50">
-                      <GitFork className="h-3 w-3" /> {repo.defaultBranch || 'main'} <ChevronDown className="h-3 w-3" />
-                    </Button>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      <strong className="text-foreground">{files?.length || 0}</strong> files
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-8 gap-2" onClick={copyCloneUrl}>
-                      {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-                      Clone
-                    </Button>
-                    
-                    <Dialog open={isAddFileOpen} onOpenChange={setIsAddFileOpen}>
-                      <DialogTrigger asChild>
-                        <Button className="h-8 bg-green-600 hover:bg-green-700 text-white" size="sm">
-                          Add file <ChevronDown className="ml-1 h-3 w-3" />
+                {viewingFile ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setViewingFile(null)} className="h-8 p-1">
+                          <ArrowLeft className="h-4 w-4 mr-1" /> Back
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-xl">
-                        <DialogHeader>
-                          <DialogTitle>Create new file</DialogTitle>
-                          <DialogDescription>
-                            Create a new file in the root of your repository.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="path">File name (with extension)</Label>
-                            <Input
-                              id="path"
-                              placeholder="e.g. index.ts"
-                              value={newFilePath}
-                              onChange={(e) => setNewFilePath(e.target.value)}
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="content">Content</Label>
-                            <Textarea
-                              id="content"
-                              placeholder="Type your code here..."
-                              className="min-h-[200px] font-mono text-xs"
-                              value={newFileContent}
-                              onChange={(e) => setNewFileContent(e.target.value)}
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setIsAddFileOpen(false)}>Cancel</Button>
-                          <Button 
-                            className="bg-green-600 hover:bg-green-700 text-white" 
-                            onClick={handleAddFile}
-                            disabled={isSavingFile || !newFilePath.trim()}
-                          >
-                            {isSavingFile ? 'Saving...' : 'Create file'}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border overflow-hidden">
-                  <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-6 w-6">
-                        <AvatarFallback className="text-[10px] font-bold">U</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">{commits?.[0]?.author || 'User'}</span>
-                      <span className="text-sm text-muted-foreground truncate max-w-md">{commits?.[0]?.message || 'Initial commit'}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>{commits?.[0]?.hash?.substring(0,7) || 'abc1234'}</span>
-                      <span>{commits?.[0]?.createdAt ? formatDistanceToNow(commits[0].createdAt.toDate()) + ' ago' : 'Recently'}</span>
-                    </div>
-                  </div>
-                  <div className="divide-y">
-                    {isFilesLoading ? (
-                      [1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)
-                    ) : files && files.length > 0 ? (
-                      files.map(file => (
-                        <div key={file.id} className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer">
-                          <div className="w-8 shrink-0">
-                            {getFileIcon(file.path)}
-                          </div>
-                          <span className="text-sm flex-1 group-hover:text-blue-500">{file.path}</span>
-                          <span className="text-xs text-muted-foreground hidden md:block">Update {file.path}</span>
-                          <span className="text-xs text-muted-foreground w-24 text-right">
-                            {file.updatedAt ? formatDistanceToNow(file.updatedAt.toDate()) + ' ago' : 'Today'}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-12 text-center text-muted-foreground">
-                        <FilePlus className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                        <p className="font-semibold text-foreground">Repository is empty</p>
-                        <p className="text-sm mt-1">Add your first file to get started.</p>
+                        <span className="text-sm font-mono flex items-center gap-2">
+                          {getFileIcon(viewingFile.path)}
+                          {viewingFile.path}
+                        </span>
                       </div>
-                    )}
+                      <div className="flex items-center gap-2">
+                        {isEditing ? (
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} className="h-8">Cancel</Button>
+                            <Button size="sm" onClick={handleUpdateFile} disabled={isUpdating} className="h-8 bg-green-600 hover:bg-green-700 text-white gap-2">
+                              {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                              Save
+                            </Button>
+                          </>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="h-8">Edit</Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <Card className="overflow-hidden border-border bg-card">
+                      <div className="bg-muted/30 px-4 py-2 border-b flex items-center justify-between text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                        <span>{getLanguageByPath(viewingFile.path)?.name || 'Plain Text'}</span>
+                        <span>{editorContent.length} chars</span>
+                      </div>
+                      <div className="relative min-h-[400px]">
+                        {isEditing ? (
+                          <textarea
+                            value={editorContent}
+                            onChange={(e) => setEditorContent(e.target.value)}
+                            className="w-full h-full min-h-[400px] bg-transparent p-4 font-mono text-sm resize-none focus:outline-none focus:ring-0 border-none"
+                            spellCheck={false}
+                            placeholder="Start typing..."
+                          />
+                        ) : (
+                          <SyntaxHighlighter
+                            language={getLanguageByPath(viewingFile.path)?.name.toLowerCase() || 'text'}
+                            style={atomDark}
+                            customStyle={{ margin: 0, padding: '1rem', background: 'transparent', minHeight: '400px' }}
+                            codeTagProps={{ style: { fontSize: '13px' } }}
+                          >
+                            {editorContent}
+                          </SyntaxHighlighter>
+                        )}
+                      </div>
+                    </Card>
                   </div>
-                </div>
-
-                {readmeFile && (
-                  <Card className="mt-8">
-                    <CardHeader className="py-3 border-b bg-muted/20">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Book className="h-4 w-4 text-muted-foreground" /> README.md
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 prose dark:prose-invert max-w-none">
-                      <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          code({node, inline, className, children, ...props}: any) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline && match ? (
-                              <SyntaxHighlighter
-                                style={atomDark}
-                                language={match[1]}
-                                PreTag="div"
-                                {...props}
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="h-8 gap-2 bg-muted/50">
+                          <GitFork className="h-3 w-3" /> {repo.defaultBranch || 'main'} <ChevronDown className="h-3 w-3" />
+                        </Button>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          <strong className="text-foreground">{files?.length || 0}</strong> files
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="h-8 gap-2" onClick={copyCloneUrl}>
+                          {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                          Clone
+                        </Button>
+                        
+                        <Dialog open={isAddFileOpen} onOpenChange={setIsAddFileOpen}>
+                          <DialogTrigger asChild>
+                            <Button className="h-8 bg-green-600 hover:bg-green-700 text-white" size="sm">
+                              Add file <ChevronDown className="ml-1 h-3 w-3" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-xl">
+                            <DialogHeader>
+                              <DialogTitle>Create new file</DialogTitle>
+                              <DialogDescription>
+                                Create a new file in the root of your repository.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor="path">File name (with extension)</Label>
+                                <Input
+                                  id="path"
+                                  placeholder="e.g. index.ts"
+                                  value={newFilePath}
+                                  onChange={(e) => setNewFilePath(e.target.value)}
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="content">Content</Label>
+                                <Textarea
+                                  id="content"
+                                  placeholder="Type your code here..."
+                                  className="min-h-[200px] font-mono text-xs"
+                                  value={newFileContent}
+                                  onChange={(e) => setNewFileContent(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setIsAddFileOpen(false)}>Cancel</Button>
+                              <Button 
+                                className="bg-green-600 hover:bg-green-700 text-white" 
+                                onClick={handleAddFile}
+                                disabled={isSavingFile || !newFilePath.trim()}
                               >
-                                {String(children).replace(/\n$/, '')}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          }
-                        }}
-                      >
-                        {readmeFile.content}
-                      </ReactMarkdown>
-                    </CardContent>
-                  </Card>
+                                {isSavingFile ? 'Saving...' : 'Create file'}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border overflow-hidden">
+                      <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-[10px] font-bold">U</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{commits?.[0]?.author || 'User'}</span>
+                          <span className="text-sm text-muted-foreground truncate max-w-md">{commits?.[0]?.message || 'Initial commit'}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>{commits?.[0]?.hash?.substring(0,7) || 'abc1234'}</span>
+                          <span>{commits?.[0]?.createdAt ? formatDistanceToNow(commits[0].createdAt.toDate()) + ' ago' : 'Recently'}</span>
+                        </div>
+                      </div>
+                      <div className="divide-y">
+                        {isFilesLoading ? (
+                          [1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)
+                        ) : files && files.length > 0 ? (
+                          files.map(file => (
+                            <div 
+                              key={file.id} 
+                              className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer"
+                              onClick={() => handleOpenFile(file)}
+                            >
+                              <div className="w-8 shrink-0">
+                                {getFileIcon(file.path)}
+                              </div>
+                              <span className="text-sm flex-1 group-hover:text-blue-500">{file.path}</span>
+                              <span className="text-xs text-muted-foreground hidden md:block">Update {file.path}</span>
+                              <span className="text-xs text-muted-foreground w-24 text-right">
+                                {file.updatedAt ? formatDistanceToNow(file.updatedAt.toDate()) + ' ago' : 'Today'}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-12 text-center text-muted-foreground">
+                            <FilePlus className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                            <p className="font-semibold text-foreground">Repository is empty</p>
+                            <p className="text-sm mt-1">Add your first file to get started.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {readmeFile && (
+                      <Card className="mt-8">
+                        <CardHeader className="py-3 border-b bg-muted/20">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Book className="h-4 w-4 text-muted-foreground" /> README.md
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 prose dark:prose-invert max-w-none">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              code({node, inline, className, children, ...props}: any) {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline && match ? (
+                                  <SyntaxHighlighter
+                                    style={atomDark}
+                                    language={match[1]}
+                                    PreTag="div"
+                                    {...props}
+                                  >
+                                    {String(children).replace(/\n$/, '')}
+                                  </SyntaxHighlighter>
+                                ) : (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              }
+                            }}
+                          >
+                            {readmeFile.content}
+                          </ReactMarkdown>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
                 )}
               </TabsContent>
             </Tabs>
