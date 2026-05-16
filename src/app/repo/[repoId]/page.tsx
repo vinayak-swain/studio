@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { 
@@ -9,7 +8,6 @@ import {
   useDoc, 
   useCollection, 
   useMemoFirebase,
-  useUser 
 } from '@/firebase';
 import { 
   doc, 
@@ -17,9 +15,6 @@ import {
   query, 
   orderBy, 
   limit, 
-  getDocs,
-  collectionGroup,
-  where
 } from 'firebase/firestore';
 import { 
   Book, 
@@ -30,12 +25,9 @@ import {
   Code, 
   FileText, 
   Folder, 
-  Clock, 
   Info,
   Copy,
   Check,
-  Search,
-  MoreHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +39,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Repository {
@@ -79,13 +70,12 @@ interface Commit {
   hash: string;
 }
 
-export default function RepositoryPage() {
+function RepositoryPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const repoId = params.repoId as string;
   const ownerId = searchParams.get('owner');
   const firestore = useFirestore();
-  const { user } = useUser();
   const [copied, setCopied] = useState(false);
 
   // Memoized Repo Reference
@@ -121,47 +111,43 @@ export default function RepositoryPage() {
 
   if (isRepoLoading) {
     return (
-      <DashboardLayout>
-        <div className="container mx-auto py-8 px-4 space-y-6">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-6 w-24" />
+      <div className="container mx-auto py-8 px-4 space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-3 space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-64 w-full" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-3 space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-            <div className="space-y-4">
-              <Skeleton className="h-32 w-full" />
-            </div>
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (!repo) {
     return (
-      <DashboardLayout>
-        <div className="flex h-[60vh] items-center justify-center">
-          <div className="text-center">
-            <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Repository not found</h1>
-            <p className="text-muted-foreground">The repository you are looking for does not exist or you don't have access.</p>
-            <Button asChild className="mt-4" variant="outline">
-              <a href="/dashboard">Back to Dashboard</a>
-            </Button>
-          </div>
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold">Repository not found</h1>
+          <p className="text-muted-foreground">The repository you are looking for does not exist or you don't have access.</p>
+          <Button asChild className="mt-4" variant="outline">
+            <a href="/dashboard">Back to Dashboard</a>
+          </Button>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   const readmeFile = files?.find(f => f.path.toLowerCase() === 'readme.md');
 
   return (
-    <DashboardLayout>
+    <>
       <div className="bg-background border-b">
         <div className="container mx-auto py-6 px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -352,6 +338,14 @@ export default function RepositoryPage() {
           </div>
         </div>
       </div>
+    </>
+  );
+}
+
+export default function RepositoryPage() {
+  return (
+    <DashboardLayout>
+      <RepositoryPageContent />
     </DashboardLayout>
   );
 }
