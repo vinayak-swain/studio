@@ -1,7 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
-import { doc, getDoc, getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getFirestore, collection, addDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { analyzeCliPush } from '@/ai/flows/cli-code-analysis';
 import { verifyCliToken } from '@/lib/cli-auth';
 
@@ -20,32 +19,54 @@ export async function POST(req: Request) {
 
   const { files, message, repoId } = await req.json();
 
+  if (!repoId || !files) {
+    return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+  }
+
   try {
     const { firebaseApp } = initializeFirebase();
     const db = getFirestore(firebaseApp);
 
+    // Verify repository ownership
+    const repoRef = doc(db, 'users', userData.userId, 'repositories', repoId);
+    const repoSnap = await getDoc(repoRef);
+    if (!repoSnap.exists()) {
+      return NextResponse.json({ error: 'Repository not found' }, { status: 404 });
+    }
+
     // AI Analysis
     const analysis = await analyzeCliPush({ files, message });
 
-    // Create push/commit record
-    const pushRef = await addDoc(collection(db, 'users', userData.userId, 'repositories', repoId, 'pushes'), {
-      message,
+    // 1. Update Files subcollection
+    for (const file of files) {
+      const fileId = file.path.replace(/\//g, '_');
+      const fileDocRef = doc(repoRef, 'files', fileId);
+      await setDoc(fileDocRef, {
+        path: file.path,
+        content: file.content,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    // 2. Create Commit Record
+    const commitRef = await addDoc(collection(repoRef, 'commits'), {
+      message: message || 'Update from CLI',
       fileCount: files.length,
       createdAt: serverTimestamp(),
-      pushedBy: 'CLI',
+      author: userData.email,
+      authorId: userData.userId,
       aiAnalysis: analysis,
+      hash: Math.random().toString(36).substring(2, 10),
     });
-
-    // In a real app, we would also store the files themselves in Storage or specific collections
-    // For this prototype, we store the metadata and analysis
 
     return NextResponse.json({ 
       success: true, 
-      commitId: pushRef.id,
+      commitId: commitRef.id,
       fileCount: files.length,
       aiAnalysis: analysis 
     });
   } catch (error: any) {
+    console.error('CLI Push Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

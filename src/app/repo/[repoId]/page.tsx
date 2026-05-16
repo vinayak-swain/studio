@@ -41,6 +41,7 @@ import {
   ArrowLeft,
   Save,
   Loader2,
+  Terminal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +96,10 @@ interface Commit {
   author: string;
   createdAt: any;
   hash: string;
+  aiAnalysis?: {
+    intentSummary: string;
+    riskScore: number;
+  }
 }
 
 function RepositoryPageContent() {
@@ -142,21 +147,9 @@ function RepositoryPageContent() {
 
   const { data: commits, isLoading: isCommitsLoading } = useCollection<Commit>(commitsQuery);
 
-  const copyCloneUrl = () => {
-    const url = `https://devnest.app/repo/${ownerId}/${repo?.name}.git`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      toast({
-        title: 'Copied to clipboard',
-        description: 'Repository clone URL copied.',
-      });
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to copy to clipboard.',
-      });
+  const copyTerminalCmd = (cmd: string) => {
+    navigator.clipboard.writeText(cmd).then(() => {
+      toast({ title: 'Copied', description: 'Command copied to clipboard.' });
     });
   };
 
@@ -249,19 +242,6 @@ function RepositoryPageContent() {
     return calculateLanguageStats(files);
   }, [files]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        if (isEditing && viewingFile) {
-          e.preventDefault();
-          handleUpdateFile();
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditing, viewingFile, editorContent]);
-
   const getFileIcon = (path: string) => {
     const lang = getLanguageByPath(path);
     if (path.includes('/')) return <Folder className="h-4 w-4 text-blue-400" />;
@@ -274,37 +254,18 @@ function RepositoryPageContent() {
   if (isRepoLoading) {
     return (
       <div className="container mx-auto py-8 px-4 space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-6 w-24" />
-        </div>
+        <Skeleton className="h-10 w-48" />
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3 space-y-4">
-            <Skeleton className="h-12 w-full" />
             <Skeleton className="h-64 w-full" />
           </div>
-          <div className="space-y-4">
-            <Skeleton className="h-32 w-full" />
-          </div>
+          <Skeleton className="h-32 w-full" />
         </div>
       </div>
     );
   }
 
-  if (!repo) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="text-center">
-          <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-2xl font-bold">Repository not found</h1>
-          <p className="text-muted-foreground">The repository you are looking for does not exist or you don't have access.</p>
-          <Button asChild className="mt-4" variant="outline">
-            <a href="/dashboard">Back to Dashboard</a>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  if (!repo) return <div>Repo not found</div>;
 
   const readmeFile = files?.find(f => f.path.toLowerCase() === 'readme.md');
 
@@ -316,24 +277,13 @@ function RepositoryPageContent() {
             <div className="flex items-center gap-3">
               <Book className="h-5 w-5 text-muted-foreground" />
               <div className="flex items-center gap-1.5 text-lg font-semibold">
-                <span className="text-blue-500 hover:underline cursor-pointer">{ownerId}</span>
+                <span className="text-blue-500">{ownerId}</span>
                 <span className="text-muted-foreground">/</span>
-                <span className="hover:underline cursor-pointer">{repo.name}</span>
+                <span>{repo.name}</span>
                 <Badge variant="outline" className="ml-2 rounded-full font-normal">
                   {repo.isPrivate ? 'Private' : 'Public'}
                 </Badge>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-8 gap-1.5">
-                <Star className="h-4 w-4" /> Star <Badge variant="secondary" className="ml-1 h-5 px-1 min-w-4 text-[10px]">{repo.stars || 0}</Badge>
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5">
-                <GitFork className="h-4 w-4" /> Fork <Badge variant="secondary" className="ml-1 h-5 px-1 min-w-4 text-[10px]">{repo.forks || 0}</Badge>
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5">
-                <Eye className="h-4 w-4" /> Watch
-              </Button>
             </div>
           </div>
         </div>
@@ -347,11 +297,8 @@ function RepositoryPageContent() {
                 <TabsTrigger value="code" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-500 rounded-none bg-transparent px-0 py-2 gap-2">
                   <Code className="h-4 w-4" /> Code
                 </TabsTrigger>
-                <TabsTrigger value="issues" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-500 rounded-none bg-transparent px-0 py-2 gap-2">
-                  <Info className="h-4 w-4" /> Issues
-                </TabsTrigger>
-                <TabsTrigger value="pulls" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-500 rounded-none bg-transparent px-0 py-2 gap-2">
-                  <GitFork className="h-4 w-4" /> Pull requests
+                <TabsTrigger value="local" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-500 rounded-none bg-transparent px-0 py-2 gap-2">
+                  <Terminal className="h-4 w-4" /> Local Setup
                 </TabsTrigger>
               </TabsList>
 
@@ -371,14 +318,14 @@ function RepositoryPageContent() {
                       <div className="flex items-center gap-2">
                         {isEditing ? (
                           <>
-                            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} className="h-8">Cancel</Button>
-                            <Button size="sm" onClick={handleUpdateFile} disabled={isUpdating} className="h-8 bg-green-600 hover:bg-green-700 text-white gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+                            <Button size="sm" onClick={handleUpdateFile} disabled={isUpdating} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                               {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                               Save
                             </Button>
                           </>
                         ) : (
-                          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="h-8">Edit</Button>
+                          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>Edit</Button>
                         )}
                       </div>
                     </div>
@@ -395,14 +342,12 @@ function RepositoryPageContent() {
                             onChange={(e) => setEditorContent(e.target.value)}
                             className="w-full h-full min-h-[400px] bg-transparent p-4 font-mono text-sm resize-none focus:outline-none focus:ring-0 border-none"
                             spellCheck={false}
-                            placeholder="Start typing..."
                           />
                         ) : (
                           <SyntaxHighlighter
                             language={getLanguageByPath(viewingFile.path)?.name.toLowerCase() || 'text'}
                             style={atomDark}
                             customStyle={{ margin: 0, padding: '1rem', background: 'transparent', minHeight: '400px' }}
-                            codeTagProps={{ style: { fontSize: '13px' } }}
                           >
                             {editorContent}
                           </SyntaxHighlighter>
@@ -417,16 +362,8 @@ function RepositoryPageContent() {
                         <Button variant="outline" size="sm" className="h-8 gap-2 bg-muted/50">
                           <GitFork className="h-3 w-3" /> {repo.defaultBranch || 'main'} <ChevronDown className="h-3 w-3" />
                         </Button>
-                        <span className="text-sm text-muted-foreground ml-2">
-                          <strong className="text-foreground">{files?.length || 0}</strong> files
-                        </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="h-8 gap-2" onClick={copyCloneUrl}>
-                          {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-                          Clone
-                        </Button>
-                        
                         <Dialog open={isAddFileOpen} onOpenChange={setIsAddFileOpen}>
                           <DialogTrigger asChild>
                             <Button className="h-8 bg-green-600 hover:bg-green-700 text-white" size="sm">
@@ -436,38 +373,21 @@ function RepositoryPageContent() {
                           <DialogContent className="sm:max-w-xl">
                             <DialogHeader>
                               <DialogTitle>Create new file</DialogTitle>
-                              <DialogDescription>
-                                Create a new file in the root of your repository.
-                              </DialogDescription>
+                              <DialogDescription>Create a new file in the root of your repository.</DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                               <div className="grid gap-2">
-                                <Label htmlFor="path">File name (with extension)</Label>
-                                <Input
-                                  id="path"
-                                  placeholder="e.g. index.ts"
-                                  value={newFilePath}
-                                  onChange={(e) => setNewFilePath(e.target.value)}
-                                />
+                                <Label htmlFor="path">File path</Label>
+                                <Input id="path" placeholder="e.g. src/index.ts" value={newFilePath} onChange={(e) => setNewFilePath(e.target.value)} />
                               </div>
                               <div className="grid gap-2">
                                 <Label htmlFor="content">Content</Label>
-                                <Textarea
-                                  id="content"
-                                  placeholder="Type your code here..."
-                                  className="min-h-[200px] font-mono text-xs"
-                                  value={newFileContent}
-                                  onChange={(e) => setNewFileContent(e.target.value)}
-                                />
+                                <Textarea id="content" className="min-h-[200px] font-mono text-xs" value={newFileContent} onChange={(e) => setNewFileContent(e.target.value)} />
                               </div>
                             </div>
                             <DialogFooter>
                               <Button variant="outline" onClick={() => setIsAddFileOpen(false)}>Cancel</Button>
-                              <Button 
-                                className="bg-green-600 hover:bg-green-700 text-white" 
-                                onClick={handleAddFile}
-                                disabled={isSavingFile || !newFilePath.trim()}
-                              >
+                              <Button className="bg-green-600 text-white" onClick={handleAddFile} disabled={isSavingFile || !newFilePath.trim()}>
                                 {isSavingFile ? 'Saving...' : 'Create file'}
                               </Button>
                             </DialogFooter>
@@ -479,9 +399,7 @@ function RepositoryPageContent() {
                     <div className="rounded-lg border overflow-hidden">
                       <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-[10px] font-bold">U</AvatarFallback>
-                          </Avatar>
+                          <Avatar className="h-6 w-6"><AvatarFallback>U</AvatarFallback></Avatar>
                           <span className="text-sm font-medium">{commits?.[0]?.author || 'User'}</span>
                           <span className="text-sm text-muted-foreground truncate max-w-md">{commits?.[0]?.message || 'Initial commit'}</span>
                         </div>
@@ -495,16 +413,9 @@ function RepositoryPageContent() {
                           [1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)
                         ) : files && files.length > 0 ? (
                           files.map(file => (
-                            <div 
-                              key={file.id} 
-                              className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer"
-                              onClick={() => handleOpenFile(file)}
-                            >
-                              <div className="w-8 shrink-0">
-                                {getFileIcon(file.path)}
-                              </div>
+                            <div key={file.id} className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => handleOpenFile(file)}>
+                              <div className="w-8 shrink-0">{getFileIcon(file.path)}</div>
                               <span className="text-sm flex-1 group-hover:text-blue-500">{file.path}</span>
-                              <span className="text-xs text-muted-foreground hidden md:block">Update {file.path}</span>
                               <span className="text-xs text-muted-foreground w-24 text-right">
                                 {file.updatedAt ? formatDistanceToNow(file.updatedAt.toDate()) + ' ago' : 'Today'}
                               </span>
@@ -523,40 +434,53 @@ function RepositoryPageContent() {
                     {readmeFile && (
                       <Card className="mt-8">
                         <CardHeader className="py-3 border-b bg-muted/20">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Book className="h-4 w-4 text-muted-foreground" /> README.md
-                          </CardTitle>
+                          <CardTitle className="text-sm flex items-center gap-2"><Book className="h-4 w-4 text-muted-foreground" /> README.md</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 prose dark:prose-invert max-w-none">
-                          <ReactMarkdown 
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              code({node, inline, className, children, ...props}: any) {
-                                const match = /language-(\w+)/.exec(className || '');
-                                return !inline && match ? (
-                                  <SyntaxHighlighter
-                                    style={atomDark}
-                                    language={match[1]}
-                                    PreTag="div"
-                                    {...props}
-                                  >
-                                    {String(children).replace(/\n$/, '')}
-                                  </SyntaxHighlighter>
-                                ) : (
-                                  <code className={className} {...props}>
-                                    {children}
-                                  </code>
-                                );
-                              }
-                            }}
-                          >
-                            {readmeFile.content}
-                          </ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{readmeFile.content}</ReactMarkdown>
                         </CardContent>
                       </Card>
                     )}
                   </>
                 )}
+              </TabsContent>
+
+              <TabsContent value="local" className="pt-4 space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold">Use the DevNest CLI</h3>
+                  <p className="text-sm text-muted-foreground">Push code directly from your terminal and get AI architectural insights.</p>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">1. Install CLI</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">npm install -g studio-dvcs</code>
+                        <Button variant="outline" size="sm" onClick={() => copyTerminalCmd('npm install -g studio-dvcs')}><Copy className="h-3 w-3" /></Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">2. Authenticate</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">studio login</code>
+                        <Button variant="outline" size="sm" onClick={() => copyTerminalCmd('studio login')}><Copy className="h-3 w-3" /></Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">3. Initialize this repository</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">studio init {repo.id}</code>
+                        <Button variant="outline" size="sm" onClick={() => copyTerminalCmd(`studio init ${repo.id}`)}><Copy className="h-3 w-3" /></Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">4. Push your code</Label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">studio push "Update landing page"</code>
+                        <Button variant="outline" size="sm" onClick={() => copyTerminalCmd('studio push "Update landing page"')}><Copy className="h-3 w-3" /></Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
@@ -564,20 +488,7 @@ function RepositoryPageContent() {
           <div className="space-y-6">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">About</h3>
-              <p className="text-sm text-foreground/80 leading-relaxed">
-                {repo.description || 'No description, website, or topics provided.'}
-              </p>
-              <div className="flex flex-col gap-2 pt-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Star className="h-4 w-4" /> <strong>{repo.stars || 0}</strong> stars
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Eye className="h-4 w-4" /> <strong>{repo.watchers || 0}</strong> watching
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <GitFork className="h-4 w-4" /> <strong>{repo.forks || 0}</strong> forks
-                </div>
-              </div>
+              <p className="text-sm text-foreground/80 leading-relaxed">{repo.description || 'No description provided.'}</p>
             </div>
 
             <hr className="border-border" />
@@ -588,11 +499,7 @@ function RepositoryPageContent() {
                 <div className="space-y-2">
                   <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
                     {langStats.map((stat, i) => (
-                      <div 
-                        key={i} 
-                        className={stat.color} 
-                        style={{ width: `${stat.percentage}%` }} 
-                      />
+                      <div key={i} className={stat.color} style={{ width: `${stat.percentage}%` }} />
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1">

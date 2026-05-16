@@ -1,7 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
-import { doc, getDoc, getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, getFirestore, collection, getDocs } from 'firebase/firestore';
 import { verifyCliToken } from '@/lib/cli-auth';
 
 export async function GET(req: Request) {
@@ -24,31 +23,25 @@ export async function GET(req: Request) {
     const { firebaseApp } = initializeFirebase();
     const db = getFirestore(firebaseApp);
 
-    // Fetch the latest push for this repository to simulate pulling code
-    const pushesRef = collection(db, 'users', userData.userId, 'repositories', repoId, 'pushes');
-    const q = query(pushesRef, orderBy('createdAt', 'desc'), limit(1));
-    const snapshot = await getDocs(q);
+    // Fetch all files for this repository
+    const filesRef = collection(db, 'users', userData.userId, 'repositories', repoId, 'files');
+    const snapshot = await getDocs(filesRef);
 
     if (snapshot.empty) {
       return NextResponse.json({ 
         files: [],
-        message: 'No commits found',
-        commitId: 'none'
+        message: 'No files found',
       });
     }
 
-    const latestPush = snapshot.docs[0].data();
+    const files = snapshot.docs.map(doc => ({
+      path: doc.data().path,
+      content: doc.data().content
+    }));
 
-    // For the prototype, we return mock file contents associated with the latest state
     return NextResponse.json({ 
       success: true, 
-      commitId: snapshot.docs[0].id,
-      message: latestPush.message,
-      timestamp: latestPush.createdAt,
-      files: [
-        { path: 'README.md', content: `# ${latestPush.repoName || 'Project'}\nPulled from DevNest.` },
-        { path: 'package.json', content: '{\n  "name": "devnest-app",\n  "version": "1.0.0"\n}' }
-      ] 
+      files 
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env tsx
 import { Command } from 'commander';
 import chalk from 'chalk';
@@ -77,17 +76,28 @@ program
       // Basic file gathering (skipping node_modules etc)
       const files = [];
       const dirFiles = await fs.readdir('.');
-      for (const f of dirFiles) {
-        if (f !== 'node_modules' && f !== '.git' && !f.startsWith('.')) {
-          const stat = await fs.stat(f);
-          if (stat.isFile()) {
+      
+      async function walk(dir: string) {
+        const items = await fs.readdir(dir);
+        for (const item of items) {
+          const fullPath = path.join(dir, item);
+          const stat = await fs.stat(fullPath);
+          
+          if (item === 'node_modules' || item === '.git' || item === '.next' || item === 'dist' || item.startsWith('.')) continue;
+
+          if (stat.isDirectory()) {
+            await walk(fullPath);
+          } else {
+            const content = await fs.readFile(fullPath, 'utf-8');
             files.push({
-              path: f,
-              content: await fs.readFile(f, 'utf-8')
+              path: path.relative('.', fullPath),
+              content
             });
           }
         }
       }
+
+      await walk('.');
 
       const response = await fetch('http://localhost:3000/api/cli/push', {
         method: 'POST',
@@ -103,11 +113,15 @@ program
 
       spinner.succeed(chalk.green('Push successful!'));
       
-      console.log('\n' + chalk.cyan.bold('--- AI CODE INSIGHTS ---'));
-      console.log(chalk.white(result.analysis.summary));
-      console.log('\n' + chalk.yellow('Suggestions:'));
-      result.analysis.suggestions.forEach((s: string) => console.log(chalk.gray(`- ${s}`)));
-      console.log('\n' + chalk.magenta(`Risk Level: ${result.analysis.riskLevel.toUpperCase()}`));
+      if (result.aiAnalysis) {
+        console.log('\n' + chalk.cyan.bold('--- AI CODE INSIGHTS ---'));
+        console.log(chalk.white(result.aiAnalysis.intentSummary));
+        console.log('\n' + chalk.yellow('Impact: ') + chalk.gray(result.aiAnalysis.architecturalImpact));
+        console.log(chalk.magenta('Risk Level: ') + chalk.white(`${result.aiAnalysis.riskScore}/100`));
+        if (result.aiAnalysis.breakingChange) {
+          console.log(chalk.red.bold('⚠️  WARNING: Breaking changes detected!'));
+        }
+      }
       
     } catch (error: any) {
       spinner.fail(chalk.red(`Push failed: ${error.message}`));
@@ -129,8 +143,12 @@ program
       });
       const data = await res.json();
       
+      if (data.error) throw new Error(data.error);
+
       for (const file of data.files) {
-        await fs.outputFile(file.path, file.content);
+        const fullPath = path.join('.', file.path);
+        await fs.ensureDir(path.dirname(fullPath));
+        await fs.outputFile(fullPath, file.content);
       }
       
       spinner.succeed(chalk.green('Pull complete.'));
@@ -142,8 +160,14 @@ program
 program
   .command('status')
   .description('Show current sync status')
-  .action(() => {
-    console.log(chalk.blue('DevNest Status: Synchronized with cloud.'));
+  .action(async () => {
+    const repoConfig = await fs.readJson(LOCAL_REPO_CONFIG).catch(() => null);
+    if (!repoConfig) {
+      console.log(chalk.yellow('Directory not initialized. Run studio-dvcs init <repoId>'));
+      return;
+    }
+    console.log(chalk.blue(`DevNest Repo ID: ${repoConfig.repoId}`));
+    console.log(chalk.green('Status: Local tracking active.'));
   });
 
 program.parse();
