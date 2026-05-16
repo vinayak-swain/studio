@@ -1,11 +1,10 @@
-
 'use client';
 
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase/hooks';
 import { popularRepositories, contributionData } from '@/lib/data';
 import Link from 'next/link';
 import { ContributionGraph } from '@/components/profile/contribution-graph';

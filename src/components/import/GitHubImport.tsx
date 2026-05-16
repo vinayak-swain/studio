@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Github, Search, Star, GitFork, RefreshCw, Loader2, ShieldAlert } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/hooks';
 
 interface GitHubRepo {
   id: number;

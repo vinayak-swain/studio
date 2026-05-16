@@ -7,7 +7,7 @@ import { URLImport } from './URLImport';
 import { ZipImport } from './ZipImport';
 import { ImportProgress, ImportStatus } from './ImportProgress';
 import { Github, Link2, FileArchive } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/hooks';
 
 export function ImportTabs() {
   const { user } = useUser();

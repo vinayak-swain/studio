@@ -1,8 +1,8 @@
 'use client';
 
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseClientProvider } from '@/firebase/hooks';
 import { DashboardHeader } from '../dashboard/header';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/hooks';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { InteractiveBackground } from '../interactive-background';

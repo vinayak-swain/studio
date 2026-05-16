@@ -9,7 +9,7 @@ import {
   useCollection, 
   useMemoFirebase,
   useUser,
-} from '@/firebase';
+} from '@/firebase/hooks';
 import { 
   doc, 
   collection, 

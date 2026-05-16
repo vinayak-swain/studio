@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/hooks';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { DashboardHeader } from '@/components/dashboard/header';

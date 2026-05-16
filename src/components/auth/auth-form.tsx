@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,11 +13,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser } from '@/firebase/hooks';
 import {
   initiateEmailSignUp,
   initiateEmailSignIn,
-} from '@/firebase/non-blocking-login';
+} from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Logo } from '../icons/logo';
 import Link from 'next/link';

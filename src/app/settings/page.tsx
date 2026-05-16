@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useFirebase, useUser } from '@/firebase';
+import { useFirebase, useUser } from '@/firebase/hooks';
 import { Pencil, User as UserIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
