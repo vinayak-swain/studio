@@ -1,15 +1,15 @@
+
 'use client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import {
   useUser,
   useFirestore,
   useCollection,
   useMemoFirebase,
-  WithId,
 } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
@@ -61,15 +61,15 @@ export function LeftSidebar() {
             {repositories?.map((repo) => (
               <li key={repo.id}>
                 <Link
-                  href="#"
+                  href={`/repo/${repo.id}?owner=${repo.ownerId}`}
                   className="flex items-center gap-2 text-sm hover:underline"
                 >
                   <Avatar className="h-5 w-5">
-                    <AvatarFallback>
+                    <AvatarFallback className="text-[10px]">
                       {(user?.displayName || user?.email || 'U')[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <span>
+                  <span className="truncate">
                     {user?.displayName || user?.email?.split('@')[0]}/{repo.name}
                   </span>
                 </Link>

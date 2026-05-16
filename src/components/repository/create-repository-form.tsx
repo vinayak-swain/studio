@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,13 +15,15 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Book } from 'lucide-react';
 import {
   collection,
   serverTimestamp,
+  addDoc,
 } from 'firebase/firestore';
+import { useState } from 'react';
 
 const formSchema = z.object({
   name: z
@@ -33,6 +36,7 @@ export function CreateRepositoryForm() {
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,17 +46,27 @@ export function CreateRepositoryForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore) return;
 
-    const repositoriesRef = collection(firestore, 'users', user.uid, 'repositories');
-    addDocumentNonBlocking(repositoriesRef, {
-      ...values,
-      ownerId: user.uid,
-      createdAt: serverTimestamp(),
-    });
-    
-    router.push('/dashboard');
+    setIsSubmitting(true);
+    try {
+      const repositoriesRef = collection(firestore, 'users', user.uid, 'repositories');
+      const docRef = await addDoc(repositoriesRef, {
+        ...values,
+        ownerId: user.uid,
+        createdAt: serverTimestamp(),
+        stars: 0,
+        forks: 0,
+        defaultBranch: 'main',
+      });
+      
+      router.push(`/repo/${docRef.id}?owner=${user.uid}`);
+    } catch (error) {
+      console.error('Error creating repository:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -70,22 +84,14 @@ export function CreateRepositoryForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-end gap-2">
-              <FormField
-                control={form.control}
-                name="owner"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Owner</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled
-                        value={user?.displayName || user?.email?.split('@')[0] || 'user'}
-                        className="w-32"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <FormLabel>Owner</FormLabel>
+                <Input
+                  disabled
+                  value={user?.displayName || user?.email?.split('@')[0] || 'user'}
+                  className="w-32"
+                />
+              </div>
               <span className="mb-2 text-xl text-muted-foreground">/</span>
               <FormField
                 control={form.control}
@@ -119,14 +125,15 @@ export function CreateRepositoryForm() {
               )}
             />
 
-            <hr />
+            <hr className="border-border" />
 
             <div className="flex justify-end">
               <Button
                 type="submit"
+                disabled={isSubmitting}
                 className="bg-green-600 text-white hover:bg-green-700"
               >
-                Create repository
+                {isSubmitting ? 'Creating...' : 'Create repository'}
               </Button>
             </div>
           </form>
