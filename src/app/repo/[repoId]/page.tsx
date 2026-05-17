@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, Suspense, useCallback } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
@@ -64,16 +63,21 @@ import remarkGfm from 'remark-gfm';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateLanguageStats, getLanguageByPath } from '@/lib/languages';
 
-// Dynamically import SyntaxHighlighter to avoid Webpack runtime errors during SSR
 const SyntaxHighlighter = dynamic(
   () => import('react-syntax-highlighter').then((mod) => mod.Prism),
   { 
     ssr: false,
-    loading: () => <Skeleton className="h-[400px] w-full" />
+    loading: () => (
+      <div className="flex flex-col gap-2 p-4">
+        <Skeleton className="h-4 w-[40%]" />
+        <Skeleton className="h-4 w-[70%]" />
+        <Skeleton className="h-4 w-[50%]" />
+        <Skeleton className="h-4 w-[60%]" />
+      </div>
+    )
   }
 );
 
-// Import style separately for dynamic highlighter
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface Repository {
@@ -109,6 +113,24 @@ interface Commit {
   }
 }
 
+const FileListItem = React.memo(({ file, onClick, getIcon }: { 
+  file: RepoFile, 
+  onClick: (f: RepoFile) => void,
+  getIcon: (p: string) => React.ReactNode
+}) => (
+  <div 
+    className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer" 
+    onClick={() => onClick(file)}
+  >
+    <div className="w-8 shrink-0">{getIcon(file.path)}</div>
+    <span className="text-sm flex-1 group-hover:text-blue-500 truncate">{file.path}</span>
+    <span className="text-xs text-muted-foreground w-24 text-right whitespace-nowrap">
+      {file.updatedAt ? formatDistanceToNow(file.updatedAt.toDate()) + ' ago' : 'Today'}
+    </span>
+  </div>
+));
+FileListItem.displayName = 'FileListItem';
+
 function RepositoryPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -123,13 +145,11 @@ function RepositoryPageContent() {
   const [newFileContent, setNewFileContent] = useState('');
   const [isSavingFile, setIsSavingFile] = useState(false);
 
-  // Editor State
   const [viewingFile, setViewingFile] = useState<RepoFile | null>(null);
   const [editorContent, setEditorContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Memoized Repo Reference
   const repoDocRef = useMemoFirebase(() => {
     if (!firestore || !repoId || !ownerId) return null;
     return doc(firestore, 'users', ownerId, 'repositories', repoId);
@@ -137,7 +157,6 @@ function RepositoryPageContent() {
 
   const { data: repo, isLoading: isRepoLoading } = useDoc<Repository>(repoDocRef);
 
-  // Files Collection
   const filesQuery = useMemoFirebase(() => {
     if (!firestore || !repoDocRef) return null;
     return collection(repoDocRef, 'files');
@@ -145,7 +164,6 @@ function RepositoryPageContent() {
 
   const { data: files, isLoading: isFilesLoading } = useCollection<RepoFile>(filesQuery);
 
-  // Commits Collection
   const commitsQuery = useMemoFirebase(() => {
     if (!firestore || !repoDocRef) return null;
     return query(collection(repoDocRef, 'commits'), orderBy('createdAt', 'desc'), limit(10));
@@ -153,11 +171,11 @@ function RepositoryPageContent() {
 
   const { data: commits } = useCollection<Commit>(commitsQuery);
 
-  const copyTerminalCmd = (cmd: string) => {
+  const copyTerminalCmd = useCallback((cmd: string) => {
     navigator.clipboard.writeText(cmd).then(() => {
       toast({ title: 'Copied', description: 'Command copied to clipboard.' });
     });
-  };
+  }, [toast]);
 
   const handleAddFile = async () => {
     if (!repoDocRef || !user || !newFilePath.trim()) return;
@@ -237,25 +255,34 @@ function RepositoryPageContent() {
     }
   };
 
-  const handleOpenFile = (file: RepoFile) => {
+  const handleOpenFile = useCallback((file: RepoFile) => {
     setViewingFile(file);
     setEditorContent(file.content);
     setIsEditing(false);
-  };
+  }, []);
 
   const langStats = useMemo(() => {
     if (!files) return [];
     return calculateLanguageStats(files);
   }, [files]);
 
-  const getFileIcon = (path: string) => {
+  const getFileIcon = useCallback((path: string) => {
     const lang = getLanguageByPath(path);
     if (path.includes('/')) return <Folder className="h-4 w-4 text-blue-400" />;
     if (lang?.name === 'TypeScript' || lang?.name === 'JavaScript') return <FileCode className="h-4 w-4 text-yellow-500" />;
     if (lang?.name === 'JSON') return <FileJson className="h-4 w-4 text-orange-400" />;
     if (lang?.name === 'Markdown') return <FileText className="h-4 w-4 text-muted-foreground" />;
     return <FileBox className="h-4 w-4 text-muted-foreground" />;
-  };
+  }, []);
+
+  const readmeFile = useMemo(() => files?.find(f => f.path.toLowerCase() === 'readme.md'), [files]);
+
+  const renderedFiles = useMemo(() => {
+    if (!files || files.length === 0) return null;
+    return files.map(file => (
+      <FileListItem key={file.id} file={file} onClick={handleOpenFile} getIcon={getFileIcon} />
+    ));
+  }, [files, handleOpenFile, getFileIcon]);
 
   if (isRepoLoading) {
     return (
@@ -272,8 +299,6 @@ function RepositoryPageContent() {
   }
 
   if (!repo) return <div className="container mx-auto py-20 text-center text-muted-foreground">Repository not found.</div>;
-
-  const readmeFile = files?.find(f => f.path.toLowerCase() === 'readme.md');
 
   return (
     <>
@@ -316,7 +341,7 @@ function RepositoryPageContent() {
                         <Button variant="ghost" size="sm" onClick={() => setViewingFile(null)} className="h-8 p-1">
                           <ArrowLeft className="h-4 w-4 mr-1" /> Back
                         </Button>
-                        <span className="text-sm font-mono flex items-center gap-2">
+                        <span className="text-sm font-mono flex items-center gap-2 truncate max-w-[200px] sm:max-w-md">
                           {getFileIcon(viewingFile.path)}
                           {viewingFile.path}
                         </span>
@@ -407,27 +432,17 @@ function RepositoryPageContent() {
                         <div className="flex items-center gap-3">
                           <Avatar className="h-6 w-6"><AvatarFallback>U</AvatarFallback></Avatar>
                           <span className="text-sm font-medium">{commits?.[0]?.author || 'User'}</span>
-                          <span className="text-sm text-muted-foreground truncate max-w-md">{commits?.[0]?.message || 'Initial commit'}</span>
+                          <span className="text-sm text-muted-foreground truncate max-w-[100px] sm:max-w-md">{commits?.[0]?.message || 'Initial commit'}</span>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>{commits?.[0]?.hash?.substring(0,7) || 'abc1234'}</span>
+                          <span className="hidden sm:inline">{commits?.[0]?.hash?.substring(0,7) || 'abc1234'}</span>
                           <span>{commits?.[0]?.createdAt ? formatDistanceToNow(commits[0].createdAt.toDate()) + ' ago' : 'Recently'}</span>
                         </div>
                       </div>
                       <div className="divide-y">
                         {isFilesLoading ? (
                           [1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)
-                        ) : files && files.length > 0 ? (
-                          files.map(file => (
-                            <div key={file.id} className="p-3 flex items-center hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => handleOpenFile(file)}>
-                              <div className="w-8 shrink-0">{getFileIcon(file.path)}</div>
-                              <span className="text-sm flex-1 group-hover:text-blue-500">{file.path}</span>
-                              <span className="text-xs text-muted-foreground w-24 text-right">
-                                {file.updatedAt ? formatDistanceToNow(file.updatedAt.toDate()) + ' ago' : 'Today'}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
+                        ) : renderedFiles || (
                           <div className="p-12 text-center text-muted-foreground">
                             <FilePlus className="h-12 w-12 mx-auto mb-4 opacity-20" />
                             <p className="font-semibold text-foreground">Repository is empty</p>
@@ -460,7 +475,7 @@ function RepositoryPageContent() {
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-bold text-muted-foreground">1. Setup CLI (Run once)</Label>
                       <div className="flex gap-2">
-                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono">cd studio-cli && npm install && npm run build && npm link</code>
+                        <code className="flex-1 bg-muted p-2 rounded text-xs font-mono overflow-hidden truncate">cd studio-cli && npm install && npm run build && npm link</code>
                         <Button variant="outline" size="sm" onClick={() => copyTerminalCmd('cd studio-cli && npm install && npm run build && npm link')}><Copy className="h-3 w-3" /></Button>
                       </div>
                     </div>
