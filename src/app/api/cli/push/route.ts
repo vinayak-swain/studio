@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
   const { files, message, repoId } = await req.json();
 
-  if (!repoId || !files) {
+  if (!repoId || !files || !Array.isArray(files)) {
     return NextResponse.json({ error: 'Missing repository ID or files' }, { status: 400 });
   }
 
@@ -32,13 +32,10 @@ export async function POST(req: Request) {
     const { adminDb } = initializeAdmin();
 
     // 1. Verify Repository Existence and Ownership
-    // Try lookup by ID first
     let repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
     let repoSnap = await repoRef.get();
     
-    // If not found by ID, try lookup by name
     if (!repoSnap.exists) {
-      console.log(`Push: Repo ID ${repoId} not found. Searching by name for user ${userData.userId}...`);
       const reposByName = await adminDb.collection('users').doc(userData.userId).collection('repositories')
         .where('name', '==', repoId)
         .limit(1)
@@ -47,32 +44,58 @@ export async function POST(req: Request) {
       if (!reposByName.empty) {
         repoRef = reposByName.docs[0].ref;
         repoSnap = reposByName.docs[0];
-        console.log(`Push: Found repository by name. ID: ${repoRef.id}`);
       } else {
-        return NextResponse.json({ error: `Repository '${repoId}' not found. Ensure the ID or name is correct and you are the owner.` }, { status: 404 });
+        return NextResponse.json({ error: `Repository '${repoId}' not found.` }, { status: 404 });
       }
     }
 
-    // 2. AI Analysis on changes
-    const analysis = await analyzeCliPush({ files, message });
+    // 2. AI Analysis on changes (Safe Trimming)
+    // We only send the first 10 files and the first 1000 chars of each to avoid token limits/500s
+    const analysisFiles = files.slice(0, 10).map(f => ({
+      path: f.path,
+      content: f.content.substring(0, 1000)
+    }));
+    
+    let analysis = {
+      changeType: 'chore',
+      intentSummary: 'Update from CLI',
+      affectedModules: [],
+      breakingChange: false,
+      riskScore: 0,
+      architecturalImpact: 'Minimal',
+      behaviorChange: 'None'
+    };
 
-    // 3. Batch Update Files
-    const batch = adminDb.batch();
-    for (const file of files) {
-      const fileId = file.path.replace(/\//g, '_');
-      const fileDocRef = repoRef.collection('files').doc(fileId);
-      batch.set(fileDocRef, {
-        path: file.path,
-        content: file.content,
-        updatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+    try {
+      analysis = await analyzeCliPush({ files: analysisFiles, message });
+    } catch (aiError) {
+      console.warn('AI Analysis failed, proceeding with defaults:', aiError);
+    }
+
+    // 3. Batch Update Files (Chunked for Firestore limits)
+    // Firestore has a 500-operation limit per batch.
+    const BATCH_LIMIT = 450;
+    for (let i = 0; i < files.length; i += BATCH_LIMIT) {
+      const chunk = files.slice(i, i + BATCH_LIMIT);
+      const batch = adminDb.batch();
+      
+      for (const file of chunk) {
+        const fileId = file.path.replace(/\//g, '_');
+        const fileDocRef = repoRef.collection('files').doc(fileId);
+        batch.set(fileDocRef, {
+          path: file.path,
+          content: file.content,
+          updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+      await batch.commit();
     }
 
     // 4. Create Commit Record
-    const commitRef = repoRef.collection('commits').doc();
     const hash = Math.random().toString(36).substring(2, 15);
+    const commitRef = repoRef.collection('commits').doc();
     
-    batch.set(commitRef, {
+    await commitRef.set({
       message: message || 'Update from terminal',
       fileCount: files.length,
       createdAt: FieldValue.serverTimestamp(),
@@ -81,8 +104,6 @@ export async function POST(req: Request) {
       aiAnalysis: analysis,
       hash,
     });
-
-    await batch.commit();
 
     return NextResponse.json({ 
       success: true, 
@@ -94,6 +115,6 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error('CLI Push Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }

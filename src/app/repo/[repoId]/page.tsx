@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { 
   useFirestore, 
@@ -30,7 +31,6 @@ import {
   FileText, 
   Folder, 
   Copy,
-  Plus,
   FileCode,
   FileJson,
   FileBox,
@@ -61,10 +61,20 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { formatDistanceToNow } from 'date-fns';
 import { calculateLanguageStats, getLanguageByPath } from '@/lib/languages';
+
+// Dynamically import SyntaxHighlighter to avoid Webpack runtime errors during SSR
+const SyntaxHighlighter = dynamic(
+  () => import('react-syntax-highlighter').then((mod) => mod.Prism),
+  { 
+    ssr: false,
+    loading: () => <Skeleton className="h-[400px] w-full" />
+  }
+);
+
+// Import style separately for dynamic highlighter
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface Repository {
   id: string;
