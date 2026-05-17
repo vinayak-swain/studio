@@ -32,11 +32,25 @@ export async function POST(req: Request) {
     const { adminDb } = initializeAdmin();
 
     // 1. Verify Repository Existence and Ownership
-    const repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
-    const repoSnap = await repoRef.get();
+    // Try lookup by ID first
+    let repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
+    let repoSnap = await repoRef.get();
     
+    // If not found by ID, try lookup by name
     if (!repoSnap.exists) {
-      return NextResponse.json({ error: 'Repository not found or permission denied' }, { status: 404 });
+      console.log(`Push: Repo ID ${repoId} not found. Searching by name for user ${userData.userId}...`);
+      const reposByName = await adminDb.collection('users').doc(userData.userId).collection('repositories')
+        .where('name', '==', repoId)
+        .limit(1)
+        .get();
+      
+      if (!reposByName.empty) {
+        repoRef = reposByName.docs[0].ref;
+        repoSnap = reposByName.docs[0];
+        console.log(`Push: Found repository by name. ID: ${repoRef.id}`);
+      } else {
+        return NextResponse.json({ error: `Repository '${repoId}' not found. Ensure the ID or name is correct and you are the owner.` }, { status: 404 });
+      }
     }
 
     // 2. AI Analysis on changes
@@ -72,6 +86,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
+      repoId: repoRef.id,
       commitId: commitRef.id,
       hash,
       fileCount: files.length,

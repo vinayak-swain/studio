@@ -26,7 +26,25 @@ export async function GET(req: Request) {
   try {
     const { adminDb } = initializeAdmin();
 
-    const repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
+    // Try lookup by ID first
+    let repoRef = adminDb.collection('users').doc(userData.userId).collection('repositories').doc(repoId);
+    let repoSnap = await repoRef.get();
+    
+    // If not found by ID, try lookup by name
+    if (!repoSnap.exists) {
+      const reposByName = await adminDb.collection('users').doc(userData.userId).collection('repositories')
+        .where('name', '==', repoId)
+        .limit(1)
+        .get();
+      
+      if (!reposByName.empty) {
+        repoRef = reposByName.docs[0].ref;
+        repoSnap = reposByName.docs[0];
+      } else {
+        return NextResponse.json({ error: 'Repository not found or permission denied' }, { status: 404 });
+      }
+    }
+
     const filesSnap = await repoRef.collection('files').get();
 
     const files = filesSnap.docs.map(doc => ({

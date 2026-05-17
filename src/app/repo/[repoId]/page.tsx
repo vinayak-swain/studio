@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/repository/dashboard-layout';
 import { 
@@ -23,16 +24,12 @@ import {
 } from 'firebase/firestore';
 import { 
   Book, 
-  Star, 
   GitFork, 
-  Eye, 
   ChevronDown, 
   Code, 
   FileText, 
   Folder, 
-  Info,
   Copy,
-  Check,
   Plus,
   FileCode,
   FileJson,
@@ -111,7 +108,6 @@ function RepositoryPageContent() {
   const { user } = useUser();
   const { toast } = useToast();
   
-  const [copied, setCopied] = useState(false);
   const [isAddFileOpen, setIsAddFileOpen] = useState(false);
   const [newFilePath, setNewFilePath] = useState('');
   const [newFileContent, setNewFileContent] = useState('');
@@ -145,7 +141,7 @@ function RepositoryPageContent() {
     return query(collection(repoDocRef, 'commits'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore, repoDocRef]);
 
-  const { data: commits, isLoading: isCommitsLoading } = useCollection<Commit>(commitsQuery);
+  const { data: commits } = useCollection<Commit>(commitsQuery);
 
   const copyTerminalCmd = (cmd: string) => {
     navigator.clipboard.writeText(cmd).then(() => {
@@ -265,7 +261,7 @@ function RepositoryPageContent() {
     );
   }
 
-  if (!repo) return <div>Repo not found</div>;
+  if (!repo) return <div className="container mx-auto py-20 text-center text-muted-foreground">Repository not found.</div>;
 
   const readmeFile = files?.find(f => f.path.toLowerCase() === 'readme.md');
 
@@ -525,7 +521,19 @@ function RepositoryPageContent() {
 export default function RepositoryPage() {
   return (
     <DashboardLayout>
-      <RepositoryPageContent />
+      <Suspense fallback={
+        <div className="container mx-auto py-8 px-4 space-y-6">
+          <Skeleton className="h-10 w-48" />
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3 space-y-4">
+              <Skeleton className="h-64 w-full" />
+            </div>
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      }>
+        <RepositoryPageContent />
+      </Suspense>
     </DashboardLayout>
   );
 }
