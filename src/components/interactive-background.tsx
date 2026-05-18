@@ -2,13 +2,20 @@
 
 import React, { useRef, useEffect } from 'react';
 
+/**
+ * @fileOverview Interactive particle background component.
+ * 
+ * Uses a canvas to render a network of moving particles that react to mouse movement.
+ * Optimized for performance and standard cross-browser compatibility.
+ */
 export function InteractiveBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false }); // Optimization: Disable alpha for background clearing
+    
+    const ctx = canvas.getContext('2d'); 
     if (!ctx) return;
 
     let width = 0;
@@ -22,7 +29,7 @@ export function InteractiveBackground() {
 
     const particles: Particle[] = [];
     const blueShades = ['#8ECAE6', '#219EBC', '#023047', '#126782'];
-    const MAX_PARTICLES = 60; // Throttled particle count for better performance
+    const MAX_PARTICLES = 60;
 
     class Particle {
       x: number;
@@ -83,13 +90,11 @@ export function InteractiveBackground() {
     }
 
     function animate() {
-      if (!ctx) return;
+      if (!ctx || !canvas) return;
       
-      // Use standard clear for better perf on some browsers
-      ctx.fillStyle = '#ffffff'; // Fallback to root bg color
-      if (document.documentElement.classList.contains('dark')) {
-          ctx.fillStyle = '#020617';
-      }
+      const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+      ctx.clearRect(0, 0, width, height); 
+      ctx.fillStyle = isDark ? '#020617' : '#ffffff';
       ctx.fillRect(0, 0, width, height);
 
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -102,7 +107,6 @@ export function InteractiveBackground() {
         }
       }
       
-      // Efficient line drawing with spatial consideration
       for (let i = 0; i < particles.length; i++) {
           const p1 = particles[i];
           for (let j = i + 1; j < particles.length; j++) {
@@ -111,14 +115,15 @@ export function InteractiveBackground() {
               const dy = p1.y - p2.y;
               const distanceSq = dx * dx + dy * dy;
 
-              if (distanceSq < 8000) { // 89 pixels squared
+              if (distanceSq < 8000) { 
                   const distance = Math.sqrt(distanceSq);
-                  const opacity = 1 - (distance / 89);
+                  const opacity = (1 - (distance / 89)) * 0.5;
+                  
                   ctx.save();
-                  ctx.globalAlpha = opacity * Math.min(p1.life / p1.maxLife, p2.life / p2.maxLife) * 0.5;
+                  ctx.beginPath();
+                  ctx.globalAlpha = opacity * Math.min(p1.life / p1.maxLife, p2.life / p2.maxLife);
                   ctx.strokeStyle = p1.color;
                   ctx.lineWidth = 0.5;
-                  ctx.beginPath();
                   ctx.moveTo(p1.x, p1.y);
                   ctx.lineTo(p2.x, p2.y);
                   ctx.stroke();
@@ -137,6 +142,7 @@ export function InteractiveBackground() {
     };
 
     const handleResize = () => {
+      if (!canvas) return;
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
       mouse.x = width / 2;
@@ -152,7 +158,9 @@ export function InteractiveBackground() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
   }, []);
 

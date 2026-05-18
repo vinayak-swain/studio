@@ -1,8 +1,12 @@
-'use client';
-
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { InteractiveBackground } from '@/components/interactive-background';
 
+/**
+ * @fileOverview Dashboard layout component.
+ * 
+ * Refactored to a Server Component to improve stability and avoid ChunkLoadErrors.
+ * This is the preferred pattern for Next.js layouts that wrap client-side providers.
+ */
 export default function DashboardLayout({
   children,
 }: {
