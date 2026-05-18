@@ -14,8 +14,9 @@ export async function verifyCliToken(token: string) {
   try {
     const { adminDb } = initializeAdmin();
     
-    // Log for debugging
-    console.log('CLI Auth: Verifying token...', token.substring(0, 8) + '...');
+    // Log for debugging (safe slice)
+    const tokenDisplay = token.substring(0, 8) + '...';
+    console.log(`CLI Auth: Verifying token [${tokenDisplay}]`);
     
     const tokenDoc = await adminDb.collection('cli_tokens').doc(token).get();
     
@@ -29,10 +30,12 @@ export async function verifyCliToken(token: string) {
       };
     }
     
-    console.warn('CLI Auth: Token not found in database');
+    console.warn(`CLI Auth: Token [${tokenDisplay}] not found in database`);
     return null;
-  } catch (error) {
-    console.error('CLI Auth verification failed:', error);
+  } catch (error: any) {
+    // Log the actual error to help diagnose environment issues (e.g. missing credentials)
+    console.error('CLI Auth verification FAILED:', error.message);
+    if (error.stack) console.error(error.stack);
     return null;
   }
 }

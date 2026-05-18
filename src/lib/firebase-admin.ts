@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { firebaseConfig } from '@/firebase/config';
@@ -11,15 +11,23 @@ import { firebaseConfig } from '@/firebase/config';
 export function initializeAdmin() {
   let adminApp: App;
 
-  if (!getApps().length) {
-    // We explicitly provide the projectId to ensure the Admin SDK
-    // targets the correct project, especially in local dev environments.
-    adminApp = initializeApp({
-      projectId: firebaseConfig.projectId,
-    });
-    console.log('Firebase Admin initialized for project:', firebaseConfig.projectId);
+  const apps = getApps();
+  const existingApp = apps.find(a => a.name === '[DEFAULT]');
+
+  if (!existingApp) {
+    try {
+      // In a production or "Studio" environment, Admin SDK often picks up 
+      // service account credentials from environment variables automatically.
+      adminApp = initializeApp({
+        projectId: firebaseConfig.projectId,
+      });
+      console.log('Firebase Admin initialized for project:', firebaseConfig.projectId);
+    } catch (e: any) {
+      console.error('Firebase Admin initialization failed:', e.message);
+      throw e;
+    }
   } else {
-    adminApp = getApps()[0];
+    adminApp = existingApp;
   }
 
   return {

@@ -12,13 +12,16 @@ import { verifyCliToken } from '@/lib/cli-auth';
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('CLI Push: Missing or malformed Authorization header');
+    return NextResponse.json({ error: 'Unauthorized: Missing or malformed header' }, { status: 401 });
   }
 
-  const token = authHeader.split(' ')[1];
+  // Use substring and trim to be robust against spacing issues
+  const token = authHeader.substring(7).trim();
   const userData = await verifyCliToken(token);
 
   if (!userData) {
+    console.error('CLI Push: Token verification failed');
     return NextResponse.json({ error: 'Invalid or expired CLI token' }, { status: 401 });
   }
 
@@ -45,12 +48,12 @@ export async function POST(req: Request) {
         repoRef = reposByName.docs[0].ref;
         repoSnap = reposByName.docs[0];
       } else {
+        console.error(`CLI Push: Repository '${repoId}' not found for user ${userData.email}`);
         return NextResponse.json({ error: `Repository '${repoId}' not found.` }, { status: 404 });
       }
     }
 
     // 2. AI Analysis on changes (Safe Trimming)
-    // We only send the first 10 files and the first 1000 chars of each to avoid token limits/500s
     const analysisFiles = files.slice(0, 10).map(f => ({
       path: f.path,
       content: f.content.substring(0, 1000)
@@ -73,7 +76,6 @@ export async function POST(req: Request) {
     }
 
     // 3. Batch Update Files (Chunked for Firestore limits)
-    // Firestore has a 500-operation limit per batch.
     const BATCH_LIMIT = 450;
     for (let i = 0; i < files.length; i += BATCH_LIMIT) {
       const chunk = files.slice(i, i + BATCH_LIMIT);
@@ -104,6 +106,8 @@ export async function POST(req: Request) {
       aiAnalysis: analysis,
       hash,
     });
+
+    console.log(`CLI Push: Successfully updated ${files.length} files in repo ${repoId}`);
 
     return NextResponse.json({ 
       success: true, 
